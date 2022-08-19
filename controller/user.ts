@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-const glob = require("glob");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
@@ -9,7 +8,7 @@ const User = require("../model/User");
 
 module.exports.register = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
-    const { fullname, email, password, confirmPassword, dateOfBirth, image } =
+    const { fullname, email, password, confirmPassword, dateOfBirth } =
       req.body;
 
     try {
@@ -96,7 +95,7 @@ module.exports.login = asyncHandler(
   }
 );
 
-module.exports.profile = asyncHandler(
+module.exports.getProfile = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     return res.status(200).json(res.locals.user);
   }
@@ -112,7 +111,9 @@ module.exports.updateProfile = asyncHandler(
       if (!password)
         return res.status(403).json({ message: "Please input password" });
 
-      const user = await User.findById(new mongoose.Types.ObjectId(_id));
+      const user = await User.findById(new mongoose.Types.ObjectId(_id)).select(
+        "+password"
+      );
 
       if (!user)
         return res.status(403).json({ message: "User does not exist" });
@@ -154,6 +155,68 @@ module.exports.updateProfile = asyncHandler(
       });
 
       return res.status(200).json({ message: "Profile Updated Successfully" });
+    } catch (err: any) {
+      return res.status(404).json(err.message);
+    }
+  }
+);
+
+module.exports.deleteProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { _id } = req.params;
+
+    const { password } = req.body;
+
+    try {
+      if (!password)
+        return res.status(403).json({ message: "Please input password" });
+
+      const user = await User.findById(new mongoose.Types.ObjectId(_id)).select(
+        "+password"
+      );
+
+      if (!user)
+        return res.status(403).json({ message: "User does not exist" });
+
+      const isMatched: boolean = await bcrypt.compare(password, user.password);
+
+      if (!isMatched)
+        return res.status(403).json({ message: "Incorrect Password" });
+
+      if (user.image)
+        fs.unlink(`${__dirname}/..${user.image}`, (err: any) => {
+          if (err) throw err;
+        });
+
+      await User.findByIdAndDelete(new mongoose.Types.ObjectId(_id));
+
+      return res.status(200).json({ message: "Profile Deleted Successfully" });
+    } catch (err: any) {
+      return res.status(404).json(err.message);
+    }
+  }
+);
+module.exports.deleteProfileImage = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { _id } = req.params;
+
+    try {
+      const user = await User.findById(new mongoose.Types.ObjectId(_id));
+
+      if (!user)
+        return res.status(403).json({ message: "User does not exist" });
+
+      if (user.image)
+        fs.unlink(`${__dirname}/..${user.image}`, (err: any) => {
+          if (err) throw err;
+        });
+
+      await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_id), {
+        image: "",
+      });
+      return res
+        .status(200)
+        .json({ message: "Profile Image Removed Successfully" });
     } catch (err: any) {
       return res.status(404).json(err.message);
     }

@@ -13,14 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
-const glob = require("glob");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const fs = require("fs");
 const User = require("../model/User");
 module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { fullname, email, password, confirmPassword, dateOfBirth, image } = req.body;
+    const { fullname, email, password, confirmPassword, dateOfBirth } = req.body;
     try {
         const userExists = yield User.findOne({ email });
         if (userExists)
@@ -85,7 +84,7 @@ module.exports.login = asyncHandler((req, res) => __awaiter(void 0, void 0, void
         return res.status(404).json(err.message);
     }
 }));
-module.exports.profile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+module.exports.getProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return res.status(200).json(res.locals.user);
 }));
 module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -94,7 +93,7 @@ module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void
     try {
         if (!password)
             return res.status(403).json({ message: "Please input password" });
-        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id));
+        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("+password");
         if (!user)
             return res.status(403).json({ message: "User does not exist" });
         const isMatched = yield bcrypt.compare(password, user.password);
@@ -128,6 +127,52 @@ module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void
             dateOfBirth,
         });
         return res.status(200).json({ message: "Profile Updated Successfully" });
+    }
+    catch (err) {
+        return res.status(404).json(err.message);
+    }
+}));
+module.exports.deleteProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id } = req.params;
+    const { password } = req.body;
+    try {
+        if (!password)
+            return res.status(403).json({ message: "Please input password" });
+        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("+password");
+        if (!user)
+            return res.status(403).json({ message: "User does not exist" });
+        const isMatched = yield bcrypt.compare(password, user.password);
+        if (!isMatched)
+            return res.status(403).json({ message: "Incorrect Password" });
+        if (user.image)
+            fs.unlink(`${__dirname}/..${user.image}`, (err) => {
+                if (err)
+                    throw err;
+            });
+        yield User.findByIdAndDelete(new mongoose_1.default.Types.ObjectId(_id));
+        return res.status(200).json({ message: "Profile Deleted Successfully" });
+    }
+    catch (err) {
+        return res.status(404).json(err.message);
+    }
+}));
+module.exports.deleteProfileImage = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id } = req.params;
+    try {
+        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id));
+        if (!user)
+            return res.status(403).json({ message: "User does not exist" });
+        if (user.image)
+            fs.unlink(`${__dirname}/..${user.image}`, (err) => {
+                if (err)
+                    throw err;
+            });
+        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_id), {
+            image: "",
+        });
+        return res
+            .status(200)
+            .json({ message: "Profile Image Removed Successfully" });
     }
     catch (err) {
         return res.status(404).json(err.message);
