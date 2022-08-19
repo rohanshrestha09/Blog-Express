@@ -129,12 +129,10 @@ module.exports.updateProfile = asyncHandler(
         if (!file.mimetype.includes("image/"))
           return res.status(403).json({ message: "Please choose an image" });
 
-        fs.unlink(
-          glob(`**${__dirname}/../media/user/${user._id}.*`),
-          (err: any) => {
+        if (user.image)
+          fs.unlink(`${__dirname}/..${user.image}`, (err: any) => {
             if (err) throw err;
-          }
-        );
+          });
 
         //@ts-ignore
         const filename = file.mimetype.replace("image/", `${user._id}.`);
