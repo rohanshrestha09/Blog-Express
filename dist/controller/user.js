@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
+const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
@@ -43,16 +44,16 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
         if (req.files) {
             const file = req.files.image;
             //@ts-ignore
-            if (!file.mimetype.includes("image/"))
+            if (!file.mimetype.startsWith("image/"))
                 return res.status(403).json({ message: "Please choose an image" });
             //@ts-ignore
             const filename = file.mimetype.replace("image/", `${user._id}.`);
             //@ts-ignore
-            file.mv(`${__dirname}/../../client/public/images/user/${filename}`, function (err) {
+            file.mv(path.join(__dirname, "/../uploads/users/", filename), function (err) {
                 if (err)
                     throw err;
                 else {
-                    user.image = `/images/user/${filename}`;
+                    user.image = `/uploads/users/${filename}`;
                     user.save();
                 }
             });
@@ -102,21 +103,21 @@ module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void
         if (req.files) {
             const file = req.files.image;
             //@ts-ignore
-            if (!file.mimetype.includes("image/"))
+            if (!file.mimetype.startsWith("image/"))
                 return res.status(403).json({ message: "Please choose an image" });
             if (user.image)
-                fs.unlink(`${__dirname}/../../client/public${user.image}`, (err) => {
+                fs.unlink(path.join(__dirname, "/..", user.image), (err) => {
                     if (err)
                         throw err;
                 });
             //@ts-ignore
             const filename = file.mimetype.replace("image/", `${user._id}.`);
             //@ts-ignore
-            file.mv(`${__dirname}/../../client/public/images/user/${filename}`, (err) => {
+            file.mv(path.join(__dirname, "/../uploads/users/", filename), (err) => {
                 if (err)
                     throw err;
                 else {
-                    user.image = `/images/user/${filename}`;
+                    user.image = `/uploads/users/${filename}`;
                     user.save();
                 }
             });
@@ -145,7 +146,7 @@ module.exports.deleteProfile = asyncHandler((req, res) => __awaiter(void 0, void
         if (!isMatched)
             return res.status(403).json({ message: "Incorrect Password" });
         if (user.image)
-            fs.unlink(`${__dirname}/../../client/public${user.image}`, (err) => {
+            fs.unlink(path.join(__dirname, "/..", user.image), (err) => {
                 if (err)
                     throw err;
             });
@@ -163,7 +164,7 @@ module.exports.deleteProfileImage = asyncHandler((req, res) => __awaiter(void 0,
         if (!user)
             return res.status(403).json({ message: "User does not exist" });
         if (user.image)
-            fs.unlink(`${__dirname}/../../client/public${user.image}`, (err) => {
+            fs.unlink(path.join(__dirname, "/..", user.image), (err) => {
                 if (err)
                     throw err;
             });

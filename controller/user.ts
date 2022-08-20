@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
+const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
@@ -42,7 +43,7 @@ module.exports.register = asyncHandler(
         const file = req.files.image;
 
         //@ts-ignore
-        if (!file.mimetype.includes("image/"))
+        if (!file.mimetype.startsWith("image/"))
           return res.status(403).json({ message: "Please choose an image" });
 
         //@ts-ignore
@@ -50,11 +51,11 @@ module.exports.register = asyncHandler(
 
         //@ts-ignore
         file.mv(
-          `${__dirname}/../../client/public/images/user/${filename}`,
+          path.join(__dirname, "/../uploads/users/", filename),
           function (err: any) {
             if (err) throw err;
             else {
-              user.image = `/images/user/${filename}`;
+              user.image = `/uploads/users/${filename}`;
               user.save();
             }
           }
@@ -130,27 +131,24 @@ module.exports.updateProfile = asyncHandler(
         const file = req.files.image;
 
         //@ts-ignore
-        if (!file.mimetype.includes("image/"))
+        if (!file.mimetype.startsWith("image/"))
           return res.status(403).json({ message: "Please choose an image" });
 
         if (user.image)
-          fs.unlink(
-            `${__dirname}/../../client/public${user.image}`,
-            (err: any) => {
-              if (err) throw err;
-            }
-          );
+          fs.unlink(path.join(__dirname, "/..", user.image), (err: any) => {
+            if (err) throw err;
+          });
 
         //@ts-ignore
         const filename = file.mimetype.replace("image/", `${user._id}.`);
 
         //@ts-ignore
         file.mv(
-          `${__dirname}/../../client/public/images/user/${filename}`,
+          path.join(__dirname, "/../uploads/users/", filename),
           (err: any) => {
             if (err) throw err;
             else {
-              user.image = `/images/user/${filename}`;
+              user.image = `/uploads/users/${filename}`;
               user.save();
             }
           }
@@ -193,12 +191,9 @@ module.exports.deleteProfile = asyncHandler(
         return res.status(403).json({ message: "Incorrect Password" });
 
       if (user.image)
-        fs.unlink(
-          `${__dirname}/../../client/public${user.image}`,
-          (err: any) => {
-            if (err) throw err;
-          }
-        );
+        fs.unlink(path.join(__dirname, "/..", user.image), (err: any) => {
+          if (err) throw err;
+        });
 
       await User.findByIdAndDelete(new mongoose.Types.ObjectId(_id));
 
@@ -220,12 +215,9 @@ module.exports.deleteProfileImage = asyncHandler(
         return res.status(403).json({ message: "User does not exist" });
 
       if (user.image)
-        fs.unlink(
-          `${__dirname}/../../client/public${user.image}`,
-          (err: any) => {
-            if (err) throw err;
-          }
-        );
+        fs.unlink(path.join(__dirname, "/..", user.image), (err: any) => {
+          if (err) throw err;
+        });
 
       await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_id), {
         image: "",
