@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 
-const UserSchema = new mongoose.Schema(
+const UserSchema = new Schema(
   {
     fullname: {
       type: String,
@@ -28,8 +28,11 @@ const UserSchema = new mongoose.Schema(
     image: String,
     imageName: String,
     bio: String,
+    following: [Schema.Types.ObjectId],
+    followers: [Schema.Types.ObjectId],
+    blogs: { type: Array, ref: "Blog" },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = model("User", UserSchema);

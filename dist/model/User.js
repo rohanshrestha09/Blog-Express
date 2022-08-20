@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = __importDefault(require("mongoose"));
-const UserSchema = new mongoose_1.default.Schema({
+const mongoose_1 = require("mongoose");
+const UserSchema = new mongoose_1.Schema({
     fullname: {
         type: String,
         required: [true, "Please input your fullname."],
@@ -31,5 +28,8 @@ const UserSchema = new mongoose_1.default.Schema({
     image: String,
     imageName: String,
     bio: String,
+    following: [mongoose_1.Schema.Types.ObjectId],
+    followers: [mongoose_1.Schema.Types.ObjectId],
+    blogs: { type: Array, ref: "Blog" },
 }, { timestamps: true });
-module.exports = mongoose_1.default.model("User", UserSchema);
+module.exports = (0, mongoose_1.model)("User", UserSchema);

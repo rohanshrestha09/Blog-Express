@@ -86,18 +86,23 @@ module.exports.login = asyncHandler((req, res) => __awaiter(void 0, void 0, void
 module.exports.getProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return res.status(200).json(res.locals.user);
 }));
+module.exports.getUserProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id } = req.params;
+    try {
+        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("-password");
+        return res
+            .status(200)
+            .json({ user, message: "User Fetched Successfully" });
+    }
+    catch (err) {
+        return res.status(404).json(err);
+    }
+}));
 module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id } = req.params;
-    const { fullname, password, bio, dateOfBirth } = req.body;
+    const { fullname, bio, dateOfBirth } = req.body;
+    const user = res.locals.user;
     try {
-        if (!password)
-            return res.status(403).json({ message: "Please input password" });
-        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("+password");
-        if (!user)
-            return res.status(403).json({ message: "User does not exist" });
-        const isMatched = yield bcrypt.compare(password, user.password);
-        if (!isMatched)
-            return res.status(403).json({ message: "Incorrect Password" });
         if (req.files) {
             const file = req.files.image;
             if (!file.mimetype.startsWith("image/"))
@@ -131,16 +136,8 @@ module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void
 }));
 module.exports.deleteProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id } = req.params;
-    const { password } = req.body;
+    const user = res.locals.user;
     try {
-        if (!password)
-            return res.status(403).json({ message: "Please input password" });
-        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("+password");
-        if (!user)
-            return res.status(403).json({ message: "User does not exist" });
-        const isMatched = yield bcrypt.compare(password, user.password);
-        if (!isMatched)
-            return res.status(403).json({ message: "Incorrect Password" });
         if (user.image)
             (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `users/${user.imageName}`));
         yield User.findByIdAndDelete(new mongoose_1.default.Types.ObjectId(_id));

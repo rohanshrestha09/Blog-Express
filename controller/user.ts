@@ -114,28 +114,33 @@ module.exports.getProfile = asyncHandler(
   }
 );
 
+module.exports.getUserProfile = asyncHandler(
+  async (req: Request, res: Response): Promise<Response> => {
+    const { _id } = req.params;
+
+    try {
+      const user = await User.findById(new mongoose.Types.ObjectId(_id)).select(
+        "-password"
+      );
+
+      return res
+        .status(200)
+        .json({ user, message: "User Fetched Successfully" });
+    } catch (err: any) {
+      return res.status(404).json(err);
+    }
+  }
+);
+
 module.exports.updateProfile = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     const { _id } = req.params;
 
-    const { fullname, password, bio, dateOfBirth } = req.body;
+    const { fullname, bio, dateOfBirth } = req.body;
+
+    const user = res.locals.user;
 
     try {
-      if (!password)
-        return res.status(403).json({ message: "Please input password" });
-
-      const user = await User.findById(new mongoose.Types.ObjectId(_id)).select(
-        "+password"
-      );
-
-      if (!user)
-        return res.status(403).json({ message: "User does not exist" });
-
-      const isMatched: boolean = await bcrypt.compare(password, user.password);
-
-      if (!isMatched)
-        return res.status(403).json({ message: "Incorrect Password" });
-
       if (req.files) {
         const file = req.files.image as any;
 
@@ -183,24 +188,9 @@ module.exports.deleteProfile = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     const { _id } = req.params;
 
-    const { password } = req.body;
+    const user = res.locals.user;
 
     try {
-      if (!password)
-        return res.status(403).json({ message: "Please input password" });
-
-      const user = await User.findById(new mongoose.Types.ObjectId(_id)).select(
-        "+password"
-      );
-
-      if (!user)
-        return res.status(403).json({ message: "User does not exist" });
-
-      const isMatched: boolean = await bcrypt.compare(password, user.password);
-
-      if (!isMatched)
-        return res.status(403).json({ message: "Incorrect Password" });
-
       if (user.image) deleteObject(ref(storage, `users/${user.imageName}`));
 
       await User.findByIdAndDelete(new mongoose.Types.ObjectId(_id));
