@@ -49,13 +49,16 @@ module.exports.register = asyncHandler(
         const filename = file.mimetype.replace("image/", `${user._id}.`);
 
         //@ts-ignore
-        file.mv(`${__dirname}/../media/user/${filename}`, function (err: any) {
-          if (err) throw err;
-          else {
-            user.image = `/media/user/${filename}`;
-            user.save();
+        file.mv(
+          `${__dirname}/../../client/public/images/user/${filename}`,
+          function (err: any) {
+            if (err) throw err;
+            else {
+              user.image = `/images/user/${filename}`;
+              user.save();
+            }
           }
-        });
+        );
       }
 
       const token: string = jwt.sign({ _id: user._id }, process.env.JWT_TOKEN, {
@@ -131,21 +134,27 @@ module.exports.updateProfile = asyncHandler(
           return res.status(403).json({ message: "Please choose an image" });
 
         if (user.image)
-          fs.unlink(`${__dirname}/..${user.image}`, (err: any) => {
-            if (err) throw err;
-          });
+          fs.unlink(
+            `${__dirname}/../../client/public${user.image}`,
+            (err: any) => {
+              if (err) throw err;
+            }
+          );
 
         //@ts-ignore
         const filename = file.mimetype.replace("image/", `${user._id}.`);
 
         //@ts-ignore
-        file.mv(`${__dirname}/../media/user/${filename}`, (err: any) => {
-          if (err) throw err;
-          else {
-            user.image = `/media/user/${filename}`;
-            user.save();
+        file.mv(
+          `${__dirname}/../../client/public/images/user/${filename}`,
+          (err: any) => {
+            if (err) throw err;
+            else {
+              user.image = `/images/user/${filename}`;
+              user.save();
+            }
           }
-        });
+        );
       }
 
       await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_id), {
@@ -184,9 +193,12 @@ module.exports.deleteProfile = asyncHandler(
         return res.status(403).json({ message: "Incorrect Password" });
 
       if (user.image)
-        fs.unlink(`${__dirname}/..${user.image}`, (err: any) => {
-          if (err) throw err;
-        });
+        fs.unlink(
+          `${__dirname}/../../client/public${user.image}`,
+          (err: any) => {
+            if (err) throw err;
+          }
+        );
 
       await User.findByIdAndDelete(new mongoose.Types.ObjectId(_id));
 
@@ -196,6 +208,7 @@ module.exports.deleteProfile = asyncHandler(
     }
   }
 );
+
 module.exports.deleteProfileImage = asyncHandler(
   async (req: Request, res: Response) => {
     const { _id } = req.params;
@@ -207,9 +220,12 @@ module.exports.deleteProfileImage = asyncHandler(
         return res.status(403).json({ message: "User does not exist" });
 
       if (user.image)
-        fs.unlink(`${__dirname}/..${user.image}`, (err: any) => {
-          if (err) throw err;
-        });
+        fs.unlink(
+          `${__dirname}/../../client/public${user.image}`,
+          (err: any) => {
+            if (err) throw err;
+          }
+        );
 
       await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_id), {
         image: "",

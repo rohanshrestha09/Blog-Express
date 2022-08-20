@@ -48,11 +48,11 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
             //@ts-ignore
             const filename = file.mimetype.replace("image/", `${user._id}.`);
             //@ts-ignore
-            file.mv(`${__dirname}/../media/user/${filename}`, function (err) {
+            file.mv(`${__dirname}/../../client/public/images/user/${filename}`, function (err) {
                 if (err)
                     throw err;
                 else {
-                    user.image = `/media/user/${filename}`;
+                    user.image = `/images/user/${filename}`;
                     user.save();
                 }
             });
@@ -105,18 +105,18 @@ module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void
             if (!file.mimetype.includes("image/"))
                 return res.status(403).json({ message: "Please choose an image" });
             if (user.image)
-                fs.unlink(`${__dirname}/..${user.image}`, (err) => {
+                fs.unlink(`${__dirname}/../../client/public${user.image}`, (err) => {
                     if (err)
                         throw err;
                 });
             //@ts-ignore
             const filename = file.mimetype.replace("image/", `${user._id}.`);
             //@ts-ignore
-            file.mv(`${__dirname}/../media/user/${filename}`, (err) => {
+            file.mv(`${__dirname}/../../client/public/images/user/${filename}`, (err) => {
                 if (err)
                     throw err;
                 else {
-                    user.image = `/media/user/${filename}`;
+                    user.image = `/images/user/${filename}`;
                     user.save();
                 }
             });
@@ -145,7 +145,7 @@ module.exports.deleteProfile = asyncHandler((req, res) => __awaiter(void 0, void
         if (!isMatched)
             return res.status(403).json({ message: "Incorrect Password" });
         if (user.image)
-            fs.unlink(`${__dirname}/..${user.image}`, (err) => {
+            fs.unlink(`${__dirname}/../../client/public${user.image}`, (err) => {
                 if (err)
                     throw err;
             });
@@ -163,7 +163,7 @@ module.exports.deleteProfileImage = asyncHandler((req, res) => __awaiter(void 0,
         if (!user)
             return res.status(403).json({ message: "User does not exist" });
         if (user.image)
-            fs.unlink(`${__dirname}/..${user.image}`, (err) => {
+            fs.unlink(`${__dirname}/../../client/public${user.image}`, (err) => {
                 if (err)
                     throw err;
             });
