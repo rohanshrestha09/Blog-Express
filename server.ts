@@ -33,3 +33,5 @@ initializeApp(firebaseConfig);
 app.use("/api", require("./routes/user"));
 
 app.listen(PORT);
+
+export default app;

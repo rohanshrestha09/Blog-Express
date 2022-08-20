@@ -14,11 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const storage_1 = require("firebase/storage");
-const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
-const fs = require("fs");
 const User = require("../model/User");
 const storage = (0, storage_1.getStorage)();
 module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -53,11 +51,9 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
                 contentType: file.mimetype,
             };
             (0, storage_1.uploadBytes)(storageRef, file.data, metadata).then(() => {
-                (0, storage_1.getDownloadURL)(storageRef).then((url) => {
-                    user.image = url;
-                    user.imageName = filename;
-                    user.save();
-                });
+                (0, storage_1.getDownloadURL)(storageRef).then((url) => __awaiter(void 0, void 0, void 0, function* () {
+                    return yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(user._id), { image: url, imageName: filename });
+                }));
             });
         }
         const token = jwt.sign({ _id: user._id }, process.env.JWT_TOKEN, {
@@ -114,11 +110,12 @@ module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void
                 contentType: file.mimetype,
             };
             (0, storage_1.uploadBytes)(storageRef, file.data, metadata).then(() => {
-                (0, storage_1.getDownloadURL)(storageRef).then((url) => {
-                    user.image = url;
-                    user.imageName = filename;
-                    user.save();
-                });
+                (0, storage_1.getDownloadURL)(storageRef).then((url) => __awaiter(void 0, void 0, void 0, function* () {
+                    return yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(user._id), {
+                        image: url,
+                        imageName: filename,
+                    });
+                }));
             });
         }
         yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_id), {

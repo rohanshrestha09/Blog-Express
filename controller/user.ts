@@ -7,11 +7,9 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
-const fs = require("fs");
 const User = require("../model/User");
 
 const storage = getStorage();
@@ -63,11 +61,13 @@ module.exports.register = asyncHandler(
         };
 
         uploadBytes(storageRef, file.data, metadata).then(() => {
-          getDownloadURL(storageRef).then((url) => {
-            user.image = url;
-            user.imageName = filename;
-            user.save();
-          });
+          getDownloadURL(storageRef).then(
+            async (url) =>
+              await User.findByIdAndUpdate(
+                new mongoose.Types.ObjectId(user._id),
+                { image: url, imageName: filename }
+              )
+          );
         });
       }
 
@@ -115,7 +115,7 @@ module.exports.getProfile = asyncHandler(
 );
 
 module.exports.updateProfile = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<Response> => {
     const { _id } = req.params;
 
     const { fullname, password, bio, dateOfBirth } = req.body;
@@ -153,11 +153,16 @@ module.exports.updateProfile = asyncHandler(
         };
 
         uploadBytes(storageRef, file.data, metadata).then(() => {
-          getDownloadURL(storageRef).then((url) => {
-            user.image = url;
-            user.imageName = filename;
-            user.save();
-          });
+          getDownloadURL(storageRef).then(
+            async (url) =>
+              await User.findByIdAndUpdate(
+                new mongoose.Types.ObjectId(user._id),
+                {
+                  image: url,
+                  imageName: filename,
+                }
+              )
+          );
         });
       }
 
@@ -175,7 +180,7 @@ module.exports.updateProfile = asyncHandler(
 );
 
 module.exports.deleteProfile = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<Response> => {
     const { _id } = req.params;
 
     const { password } = req.body;
@@ -208,7 +213,7 @@ module.exports.deleteProfile = asyncHandler(
 );
 
 module.exports.deleteProfileImage = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<Response> => {
     const { _id } = req.params;
 
     try {
@@ -223,6 +228,7 @@ module.exports.deleteProfileImage = asyncHandler(
         image: "",
         imageName: "",
       });
+
       return res
         .status(200)
         .json({ message: "Profile Image Removed Successfully" });
