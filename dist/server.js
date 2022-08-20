@@ -15,6 +15,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use((0, express_fileupload_1.default)());
 (0, db_1.default)();
-const PORT = 5000 || process.env.PORT;
+const PORT = process.env.PORT;
 app.use("/api", require("./routes/user"));
 app.listen(PORT);

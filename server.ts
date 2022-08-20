@@ -14,7 +14,7 @@ app.use(fileUpload());
 
 connectDB();
 
-const PORT = 5000 || process.env.PORT;
+const PORT = process.env.PORT;
 
 app.use("/api", require("./routes/user"));
 
