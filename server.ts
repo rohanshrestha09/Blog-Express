@@ -17,8 +17,7 @@ connectDB();
 
 const PORT = process.env.PORT;
 
-app.use(express.static(path.join(__dirname, "/../client/.next")));
-app.use("/uploads", express.static(path.join(__dirname, "/../uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api", require("./routes/user"));
 
