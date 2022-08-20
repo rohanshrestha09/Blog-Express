@@ -1,9 +1,10 @@
 import express, { Application } from "express";
 import connectDB from "./db";
+import fileUpload from "express-fileupload";
+const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 require("dotenv").config({ path: __dirname + "/.env" });
-import fileUpload from "express-fileupload";
 
 const app: Application = express();
 
@@ -15,6 +16,8 @@ app.use(fileUpload());
 connectDB();
 
 const PORT = process.env.PORT;
+
+app.use(express.static(path.resolve(__dirname, "..", "client/build")));
 
 app.use("/api", require("./routes/user"));
 

@@ -5,6 +5,7 @@
     "build": "next build",
     "start": "next start"
   },
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@tanstack/react-query": "^4.2.1",
     "antd": "^4.22.6",
