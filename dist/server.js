@@ -17,6 +17,6 @@ app.use(bodyParser.json());
 app.use((0, express_fileupload_1.default)());
 (0, db_1.default)();
 const PORT = process.env.PORT;
-app.use(express_1.default.static(path.resolve(__dirname, "..", "client/build")));
+app.use(express_1.default.static(path.resolve(__dirname, "..", "client/.next")));
 app.use("/api", require("./routes/user"));
 app.listen(PORT);
