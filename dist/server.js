@@ -30,4 +30,3 @@ const firebaseConfig = {
 (0, app_1.initializeApp)(firebaseConfig);
 app.use("/api", require("./routes/user"));
 app.listen(PORT);
-exports.default = app;
