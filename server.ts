@@ -17,7 +17,9 @@ connectDB();
 
 const PORT = process.env.PORT;
 
-app.use(express.static(path.resolve(__dirname, "..", "client/.next")));
+app.use(
+  express.static(path.resolve(__dirname, "..", "client/.next/server/pages"))
+);
 
 app.use("/api", require("./routes/user"));
 
