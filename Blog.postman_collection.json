@@ -1,0 +1,316 @@
+{
+	"info": {
+		"_postman_id": "56f1e052-ff6d-4f6a-9e46-96d5f36787e2",
+		"name": "Blog",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20973558"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Register New User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fullname",
+									"value": "Rohan Shrestha",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "shresthacr11@gmail.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "rohan123",
+									"type": "text"
+								},
+								{
+									"key": "confirmPassword",
+									"value": "rohan123",
+									"type": "text"
+								},
+								{
+									"key": "dateOfBirth",
+									"value": "2003-09-08",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/shres/Downloads/R (1).png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "email",
+									"value": "shresthacr11@gmail.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "rohan123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/profile/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profile",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/profile/6300e16f054847908cbda2e1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profile",
+								"6300e16f054847908cbda2e1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/shres/Downloads/IMG_20220817_141638.jpg"
+								},
+								{
+									"key": "fullname",
+									"value": "Rohan Dattebayo",
+									"type": "text"
+								},
+								{
+									"key": "bio",
+									"value": "Very Nice",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "rohan123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/profile/6300d983255ba0461478782c",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profile",
+								"6300d983255ba0461478782c"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Profile Image",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/profile/image/6300b965ceb7cbadd2da98d1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profile",
+								"image",
+								"6300b965ceb7cbadd2da98d1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Profile",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "password",
+									"value": "rohan123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/profile/6300d983255ba0461478782c",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profile",
+								"6300d983255ba0461478782c"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Activity",
+			"item": [
+				{
+					"name": "Follow",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "toFollowId",
+									"value": "6300e16f054847908cbda2e1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/follow/6300e17d054847908cbda2e5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"follow",
+								"6300e17d054847908cbda2e5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unfollow",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "toUnfollowId",
+									"value": "6300e16f054847908cbda2e1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/follow/6300e17d054847908cbda2e5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"follow",
+								"6300e17d054847908cbda2e5"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
