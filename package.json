@@ -4,7 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "npm install && nodemon dist/server.js"
+    "start": "npm install && nodemon dist/server.js",
+    "build": "cd client && npm run build"
   },
   "dependencies": {
     "@types/express": "^4.17.13",
