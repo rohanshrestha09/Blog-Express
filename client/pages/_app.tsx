@@ -1,8 +1,13 @@
-import '../styles/globals.css'
-import type { AppProps } from 'next/app'
+import "../styles/globals.css";
+import type { AppProps } from "next/app";
+import UserAuth from "../utils/UserAuth";
 
 function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
+  return (
+    <UserAuth>
+      <Component {...pageProps} />
+    </UserAuth>
+  );
 }
 
-export default MyApp
+export default MyApp;

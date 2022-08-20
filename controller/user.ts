@@ -1,11 +1,20 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const fs = require("fs");
 const User = require("../model/User");
+
+const storage = getStorage();
 
 module.exports.register = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
@@ -40,26 +49,26 @@ module.exports.register = asyncHandler(
       });
 
       if (req.files) {
-        const file = req.files.image;
+        const file = req.files.image as any;
 
-        //@ts-ignore
         if (!file.mimetype.startsWith("image/"))
           return res.status(403).json({ message: "Please choose an image" });
 
-        //@ts-ignore
         const filename = file.mimetype.replace("image/", `${user._id}.`);
 
-        //@ts-ignore
-        file.mv(
-          path.join(__dirname, "/../uploads/users/", filename),
-          function (err: any) {
-            if (err) throw err;
-            else {
-              user.image = `/uploads/users/${filename}`;
-              user.save();
-            }
-          }
-        );
+        const storageRef = ref(storage, `users/${filename}`);
+
+        const metadata = {
+          contentType: file.mimetype,
+        };
+
+        uploadBytes(storageRef, file.data, metadata).then(() => {
+          getDownloadURL(storageRef).then((url) => {
+            user.image = url;
+            user.imageName = filename;
+            user.save();
+          });
+        });
       }
 
       const token: string = jwt.sign({ _id: user._id }, process.env.JWT_TOKEN, {
@@ -128,31 +137,28 @@ module.exports.updateProfile = asyncHandler(
         return res.status(403).json({ message: "Incorrect Password" });
 
       if (req.files) {
-        const file = req.files.image;
+        const file = req.files.image as any;
 
-        //@ts-ignore
         if (!file.mimetype.startsWith("image/"))
           return res.status(403).json({ message: "Please choose an image" });
 
-        if (user.image)
-          fs.unlink(path.join(__dirname, "/..", user.image), (err: any) => {
-            if (err) throw err;
-          });
+        if (user.image) deleteObject(ref(storage, `users/${user.imageName}`));
 
-        //@ts-ignore
         const filename = file.mimetype.replace("image/", `${user._id}.`);
 
-        //@ts-ignore
-        file.mv(
-          path.join(__dirname, "/../uploads/users/", filename),
-          (err: any) => {
-            if (err) throw err;
-            else {
-              user.image = `/uploads/users/${filename}`;
-              user.save();
-            }
-          }
-        );
+        const storageRef = ref(storage, `users/${filename}`);
+
+        const metadata = {
+          contentType: file.mimetype,
+        };
+
+        uploadBytes(storageRef, file.data, metadata).then(() => {
+          getDownloadURL(storageRef).then((url) => {
+            user.image = url;
+            user.imageName = filename;
+            user.save();
+          });
+        });
       }
 
       await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_id), {
@@ -190,10 +196,7 @@ module.exports.deleteProfile = asyncHandler(
       if (!isMatched)
         return res.status(403).json({ message: "Incorrect Password" });
 
-      if (user.image)
-        fs.unlink(path.join(__dirname, "/..", user.image), (err: any) => {
-          if (err) throw err;
-        });
+      if (user.image) deleteObject(ref(storage, `users/${user.imageName}`));
 
       await User.findByIdAndDelete(new mongoose.Types.ObjectId(_id));
 
@@ -214,13 +217,11 @@ module.exports.deleteProfileImage = asyncHandler(
       if (!user)
         return res.status(403).json({ message: "User does not exist" });
 
-      if (user.image)
-        fs.unlink(path.join(__dirname, "/..", user.image), (err: any) => {
-          if (err) throw err;
-        });
+      if (user.image) deleteObject(ref(storage, `users/${user.imageName}`));
 
       await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_id), {
         image: "",
+        imageName: "",
       });
       return res
         .status(200)

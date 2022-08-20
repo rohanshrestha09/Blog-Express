@@ -29,6 +29,7 @@ const UserSchema = new mongoose_1.default.Schema({
         required: [true, "Please provide Date of Birth."],
     },
     image: String,
+    imageName: String,
     bio: String,
 }, { timestamps: true });
 module.exports = mongoose_1.default.model("User", UserSchema);

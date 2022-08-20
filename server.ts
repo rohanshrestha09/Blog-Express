@@ -1,7 +1,7 @@
 import express, { Application } from "express";
 import connectDB from "./db";
 import fileUpload from "express-fileupload";
-const path = require("path");
+import { initializeApp } from "firebase/app";
 const cors = require("cors");
 const bodyParser = require("body-parser");
 require("dotenv").config({ path: __dirname + "/.env" });
@@ -17,7 +17,18 @@ connectDB();
 
 const PORT = process.env.PORT;
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const firebaseConfig = {
+  apiKey: process.env.API_KEY,
+  authDomain: "blog-sansar.firebaseapp.com",
+  projectId: "blog-sansar",
+  storageBucket: "blog-sansar.appspot.com",
+  messagingSenderId: process.env.MESSAGING_SENDER_ID,
+  appId: process.env.APP_ID,
+  measurementId: process.env.MEASUREMENT_ID,
+};
+
+// Initialize Firebase
+initializeApp(firebaseConfig);
 
 app.use("/api", require("./routes/user"));
 

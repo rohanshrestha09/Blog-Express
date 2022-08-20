@@ -26,6 +26,7 @@ const UserSchema = new mongoose.Schema(
       required: [true, "Please provide Date of Birth."],
     },
     image: String,
+    imageName: String,
     bio: String,
   },
   { timestamps: true }
