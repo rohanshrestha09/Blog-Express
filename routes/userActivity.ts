@@ -8,8 +8,8 @@ const router: Router = express.Router();
 
 router.use(auth);
 
-router.post("/follow/:_id", follow);
+router.post("/follow/:_userId", follow);
 
-router.delete("/follow/:_id", unfollow);
+router.delete("/follow/:_userId", unfollow);
 
 module.exports = router;

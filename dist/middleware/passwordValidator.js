@@ -17,12 +17,12 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const User = require("../model/User");
 module.exports = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id } = req.params;
+    const { _userId } = req.params;
     const { password } = req.body;
     try {
         if (!password)
             return res.status(403).json({ message: "Please input password" });
-        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("+password");
+        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_userId)).select("+password");
         if (!user)
             return res.status(403).json({ message: "User does not exist" });
         const isMatched = yield bcrypt.compare(password, user.password);
@@ -32,6 +32,6 @@ module.exports = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void
         next();
     }
     catch (err) {
-        return res.status(404).json(err);
+        return res.status(404).json({ message: err.message });
     }
 }));

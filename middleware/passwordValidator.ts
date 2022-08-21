@@ -6,7 +6,7 @@ const User = require("../model/User");
 
 module.exports = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    const { _id } = req.params;
+    const { _userId } = req.params;
 
     const { password } = req.body;
 
@@ -14,9 +14,9 @@ module.exports = asyncHandler(
       if (!password)
         return res.status(403).json({ message: "Please input password" });
 
-      const user = await User.findById(new mongoose.Types.ObjectId(_id)).select(
-        "+password"
-      );
+      const user = await User.findById(
+        new mongoose.Types.ObjectId(_userId)
+      ).select("+password");
 
       if (!user)
         return res.status(403).json({ message: "User does not exist" });
@@ -30,7 +30,7 @@ module.exports = asyncHandler(
 
       next();
     } catch (err: any) {
-      return res.status(404).json(err);
+      return res.status(404).json({ message: err.message });
     }
   }
 );

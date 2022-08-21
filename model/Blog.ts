@@ -2,22 +2,21 @@ import { Schema, model } from "mongoose";
 
 const BlogSchema = new Schema(
   {
-    author: Schema.Types.ObjectId,
-    image: {
-      type: String,
-      required: [true, "Please chose an image"],
-    },
+    author: { type: Schema.Types.ObjectId, required: [true, "Author missing"] },
+    image: String,
+    imageName: String,
     title: {
       type: String,
-      required: [true, "Please input title"],
+      required: [true, "Title missing"],
     },
     content: {
       type: String,
-      required: [true, "Please input content"],
+      required: [true, "Content missing"],
+      minLength: [20, "Content must contain atleast 20 characters"],
     },
     likers: [Schema.Types.ObjectId],
-    likes: Number,
-    views: Number,
+    likes: { type: Number, default: 0 },
+    views: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
     comments: [{ commenter: Schema.Types.ObjectId, content: String }],
   },

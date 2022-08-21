@@ -60,14 +60,13 @@ module.exports.register = asyncHandler(
           contentType: file.mimetype,
         };
 
-        uploadBytes(storageRef, file.data, metadata).then(() => {
-          getDownloadURL(storageRef).then(
-            async (url) =>
-              await User.findByIdAndUpdate(
-                new mongoose.Types.ObjectId(user._id),
-                { image: url, imageName: filename }
-              )
-          );
+        await uploadBytes(storageRef, file.data, metadata);
+
+        const url = await getDownloadURL(storageRef);
+
+        await User.findByIdAndUpdate(new mongoose.Types.ObjectId(user._id), {
+          image: url,
+          imageName: filename,
         });
       }
 
@@ -77,7 +76,7 @@ module.exports.register = asyncHandler(
 
       return res.status(200).json({ token, message: "Signup Successful" });
     } catch (err: any) {
-      return res.status(404).json(err.message);
+      return res.status(404).json({ message: err.message });
     }
   }
 );
@@ -103,38 +102,41 @@ module.exports.login = asyncHandler(
 
       return res.status(200).json({ token, message: "Login Successful" });
     } catch (err: any) {
-      return res.status(404).json(err.message);
+      return res.status(404).json({ message: err.message });
     }
   }
 );
 
-module.exports.getProfile = asyncHandler(
+module.exports.authSuccess = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     return res.status(200).json(res.locals.user);
   }
 );
 
-module.exports.getUserProfile = asyncHandler(
+module.exports.getProfile = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
-    const { _id } = req.params;
+    const { _userId } = req.params;
 
     try {
-      const user = await User.findById(new mongoose.Types.ObjectId(_id)).select(
-        "-password"
-      );
+      const user = await User.findById(
+        new mongoose.Types.ObjectId(_userId)
+      ).select("-password");
+
+      if (!user)
+        return res.status(403).json({ message: "User does not exist" });
 
       return res
         .status(200)
         .json({ user, message: "User Fetched Successfully" });
     } catch (err: any) {
-      return res.status(404).json(err);
+      return res.status(404).json({ message: err.message });
     }
   }
 );
 
 module.exports.updateProfile = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
-    const { _id } = req.params;
+    const { _userId } = req.params;
 
     const { fullname, bio, dateOfBirth } = req.body;
 
@@ -149,7 +151,7 @@ module.exports.updateProfile = asyncHandler(
 
         if (user.image) deleteObject(ref(storage, `users/${user.imageName}`));
 
-        const filename = file.mimetype.replace("image/", `${user._id}.`);
+        const filename = file.mimetype.replace("image/", `${_userId}.`);
 
         const storageRef = ref(storage, `users/${filename}`);
 
@@ -157,21 +159,17 @@ module.exports.updateProfile = asyncHandler(
           contentType: file.mimetype,
         };
 
-        uploadBytes(storageRef, file.data, metadata).then(() => {
-          getDownloadURL(storageRef).then(
-            async (url) =>
-              await User.findByIdAndUpdate(
-                new mongoose.Types.ObjectId(user._id),
-                {
-                  image: url,
-                  imageName: filename,
-                }
-              )
-          );
+        await uploadBytes(storageRef, file.data, metadata);
+
+        const url = await getDownloadURL(storageRef);
+
+        await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_userId), {
+          image: url,
+          imageName: filename,
         });
       }
 
-      await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_id), {
+      await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_userId), {
         fullname,
         bio,
         dateOfBirth,
@@ -179,42 +177,42 @@ module.exports.updateProfile = asyncHandler(
 
       return res.status(200).json({ message: "Profile Updated Successfully" });
     } catch (err: any) {
-      return res.status(404).json(err.message);
+      return res.status(404).json({ message: err.message });
     }
   }
 );
 
 module.exports.deleteProfile = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
-    const { _id } = req.params;
+    const { _userId } = req.params;
 
     const user = res.locals.user;
 
     try {
       if (user.image) deleteObject(ref(storage, `users/${user.imageName}`));
 
-      await User.findByIdAndDelete(new mongoose.Types.ObjectId(_id));
+      await User.findByIdAndDelete(new mongoose.Types.ObjectId(_userId));
 
       return res.status(200).json({ message: "Profile Deleted Successfully" });
     } catch (err: any) {
-      return res.status(404).json(err.message);
+      return res.status(404).json({ message: err.message });
     }
   }
 );
 
 module.exports.deleteProfileImage = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
-    const { _id } = req.params;
+    const { _userId } = req.params;
 
     try {
-      const user = await User.findById(new mongoose.Types.ObjectId(_id));
+      const user = await User.findById(new mongoose.Types.ObjectId(_userId));
 
       if (!user)
         return res.status(403).json({ message: "User does not exist" });
 
       if (user.image) deleteObject(ref(storage, `users/${user.imageName}`));
 
-      await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_id), {
+      await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_userId), {
         image: "",
         imageName: "",
       });
@@ -223,7 +221,7 @@ module.exports.deleteProfileImage = asyncHandler(
         .status(200)
         .json({ message: "Profile Image Removed Successfully" });
     } catch (err: any) {
-      return res.status(404).json(err.message);
+      return res.status(404).json({ message: err.message });
     }
   }
 );

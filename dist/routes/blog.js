@@ -4,10 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const { getAllBlogs, getBlog, postBlog, updateBlog, deleteBlog, } = require("../controller/blog");
 const auth = require("../middleware/auth");
-const { follow, unfollow } = require("../controller/userActivity");
 const router = express_1.default.Router();
 router.use(auth);
-router.post("/follow/:_userId", follow);
-router.delete("/follow/:_userId", unfollow);
+router.get("/blog", getAllBlogs);
+router.get("/blog/:_blogId", getBlog);
+router.post("/blog/:_authorId", postBlog);
+router.put("/blog/:_blogId", updateBlog);
+router.delete("/blog/:_blogId", deleteBlog);
 module.exports = router;

@@ -3,7 +3,7 @@ const {
   register,
   login,
   getProfile,
-  getUserProfile,
+  authSuccess,
   updateProfile,
   deleteProfile,
   deleteProfileImage,
@@ -19,14 +19,14 @@ router.post("/register", register);
 
 router.post("/login", login);
 
-router.get("/profile", auth, getProfile);
+router.get("/auth", auth, authSuccess);
 
-router.get("/profile/:_id", auth, getUserProfile);
+router.get("/profile/:_userId", auth, getProfile);
 
-router.put("/profile/:_id", auth, passwordValidator, updateProfile);
+router.put("/profile/:_userId", auth, passwordValidator, updateProfile);
 
-router.delete("/profile/:_id", auth, passwordValidator, deleteProfile);
+router.delete("/profile/:_userId", auth, passwordValidator, deleteProfile);
 
-router.delete("/profile/image/:_id", auth, deleteProfileImage);
+router.delete("/profile/image/:_userId", auth, deleteProfileImage);
 
 module.exports = router;

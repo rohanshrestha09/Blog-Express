@@ -16,42 +16,42 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler = require("express-async-handler");
 const User = require("../model/User");
 module.exports.follow = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id } = req.params;
+    const { _userId } = req.params;
     const { toFollowId } = req.body;
     try {
         const followingExists = yield User.findOne({
             $and: [
-                { _id: new mongoose_1.default.Types.ObjectId(_id) },
+                { _id: new mongoose_1.default.Types.ObjectId(_userId) },
                 { following: [new mongoose_1.default.Types.ObjectId(toFollowId)] },
             ],
         });
         if (followingExists)
             return res.status(403).json({ message: "Already Following" });
-        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_id), {
+        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_userId), {
             $push: { following: new mongoose_1.default.Types.ObjectId(toFollowId) },
         });
         yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(toFollowId), {
-            $push: { followers: new mongoose_1.default.Types.ObjectId(_id) },
+            $push: { followers: new mongoose_1.default.Types.ObjectId(_userId) },
         });
         return res.status(200).json({ message: "Follow Successful" });
     }
     catch (err) {
-        return res.status(404).json(err.message);
+        return res.status(404).json({ message: err.message });
     }
 }));
 module.exports.unfollow = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id } = req.params;
+    const { _userId } = req.params;
     const { toUnfollowId } = req.body;
     try {
-        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_id), {
+        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_userId), {
             $pull: { following: new mongoose_1.default.Types.ObjectId(toUnfollowId) },
         });
         yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(toUnfollowId), {
-            $pull: { followers: new mongoose_1.default.Types.ObjectId(_id) },
+            $pull: { followers: new mongoose_1.default.Types.ObjectId(_userId) },
         });
         return res.status(200).json({ message: "Unfollow Successful" });
     }
     catch (err) {
-        return res.status(404).json(err.message);
+        return res.status(404).json({ message: err.message });
     }
 }));

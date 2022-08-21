@@ -31,6 +31,9 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 
 app.use("/api", require("./routes/user"));
+
 app.use("/api", require("./routes/userActivity"));
+
+app.use("/api", require("./routes/blog"));
 
 app.listen(PORT);

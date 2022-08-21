@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import mongoose from "mongoose";
 const User = require("../model/User");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
@@ -17,14 +18,18 @@ module.exports = asyncHandler(
     try {
       const { _id } = jwt.verify(token, process.env.JWT_TOKEN);
 
-      const user = await User.findById(_id).select("-password");
+      const user = await User.findById(new mongoose.Types.ObjectId(_id)).select(
+        "-password"
+      );
 
-      if (!user) return res.status(404).json({ message: "Not found" });
+      if (!user)
+        return res.status(404).json({ message: "User does not exist" });
 
       res.locals.user = user;
+
       next();
     } catch (err: any) {
-      return res.status(404).json(err.message);
+      return res.status(404).json({ message: err.message });
     }
   }
 );
