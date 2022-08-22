@@ -30,7 +30,6 @@ const UserSchema = new Schema(
     bio: String,
     following: [Schema.Types.ObjectId],
     followers: [Schema.Types.ObjectId],
-    blogs: { type: Array, ref: "Blog" },
   },
   { timestamps: true }
 );

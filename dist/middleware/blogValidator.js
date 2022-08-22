@@ -13,23 +13,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
-const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
-const User = require("../model/User");
 const Blog = require("../model/Blog");
 module.exports = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    let token;
-    const { authorization } = req.headers;
-    if (authorization && authorization.startsWith("Bearer"))
-        token = authorization.split(" ")[1];
-    if (!token)
-        return res.status(403).json({ message: "Not authorised" });
+    const { _blogId } = req.params;
     try {
-        const { _id } = jwt.verify(token, process.env.JWT_TOKEN);
-        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("-password");
-        if (!user)
-            return res.status(404).json({ message: "User does not exist" });
-        res.locals.user = Object.assign(Object.assign({}, user._doc), { blogs: yield Blog.find({ author: new mongoose_1.default.Types.ObjectId(_id) }) });
+        const blog = yield Blog.findById(new mongoose_1.default.Types.ObjectId(_blogId));
+        if (!blog)
+            return res.status(404).json({ message: "Blog does not exist" });
+        res.locals.blog = blog;
         next();
     }
     catch (err) {

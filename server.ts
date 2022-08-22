@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import connectDB from "./db";
 import fileUpload from "express-fileupload";
 import { initializeApp } from "firebase/app";
+const rateLimit = require("express-rate-limit");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 require("dotenv").config({ path: __dirname + "/.env" });
@@ -30,10 +31,19 @@ const firebaseConfig = {
 // Initialize Firebase
 initializeApp(firebaseConfig);
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(limiter);
+
 app.use("/api", require("./routes/user"));
 
-app.use("/api", require("./routes/userActivity"));
-
 app.use("/api", require("./routes/blog"));
+
+app.use("/api", require("./routes/userActivity"));
 
 app.listen(PORT);

@@ -8,27 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const User = require("../model/User");
 module.exports = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _userId } = req.params;
+    const { _id: _userId } = res.locals.user;
     const { password } = req.body;
     try {
         if (!password)
             return res.status(403).json({ message: "Please input password" });
-        const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_userId)).select("+password");
-        if (!user)
-            return res.status(403).json({ message: "User does not exist" });
+        const user = yield User.findById(_userId).select("+password");
         const isMatched = yield bcrypt.compare(password, user.password);
         if (!isMatched)
             return res.status(403).json({ message: "Incorrect Password" });
-        res.locals.user = user;
         next();
     }
     catch (err) {

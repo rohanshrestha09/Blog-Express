@@ -8,30 +8,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler = require("express-async-handler");
 const User = require("../model/User");
+const Blog = require("../model/Blog");
 module.exports.follow = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _userId } = req.params;
-    const { toFollowId } = req.body;
+    const { _id: _queryUserId } = res.locals.queryUser;
+    const { _id: _userId } = res.locals.user;
+    if (_userId === _queryUserId)
+        return res.status(403).json({ message: "Can't follow same user" });
     try {
         const followingExists = yield User.findOne({
-            $and: [
-                { _id: new mongoose_1.default.Types.ObjectId(_userId) },
-                { following: [new mongoose_1.default.Types.ObjectId(toFollowId)] },
-            ],
+            $and: [{ _id: _userId }, { following: _queryUserId }],
         });
         if (followingExists)
             return res.status(403).json({ message: "Already Following" });
-        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_userId), {
-            $push: { following: new mongoose_1.default.Types.ObjectId(toFollowId) },
+        yield User.findByIdAndUpdate(_userId, {
+            $push: { following: _queryUserId },
         });
-        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(toFollowId), {
-            $push: { followers: new mongoose_1.default.Types.ObjectId(_userId) },
+        yield User.findByIdAndUpdate(_queryUserId, {
+            $push: { followers: _userId },
         });
         return res.status(200).json({ message: "Follow Successful" });
     }
@@ -40,16 +36,89 @@ module.exports.follow = asyncHandler((req, res) => __awaiter(void 0, void 0, voi
     }
 }));
 module.exports.unfollow = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _userId } = req.params;
-    const { toUnfollowId } = req.body;
+    const { _id: _queryUserId } = res.locals.queryUser;
+    const { _id: _userId } = res.locals.user;
+    if (_userId === _queryUserId)
+        return res.status(403).json({ message: "Can't unfollow same user" });
     try {
-        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_userId), {
-            $pull: { following: new mongoose_1.default.Types.ObjectId(toUnfollowId) },
+        const followingExists = yield User.findOne({
+            $and: [{ _id: _userId }, { following: _queryUserId }],
         });
-        yield User.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(toUnfollowId), {
-            $pull: { followers: new mongoose_1.default.Types.ObjectId(_userId) },
+        if (!followingExists)
+            return res.status(403).json({ message: "Not following" });
+        yield User.findByIdAndUpdate(_userId, {
+            $pull: { following: _queryUserId },
+        });
+        yield User.findByIdAndUpdate(_queryUserId, {
+            $pull: { followers: _userId },
         });
         return res.status(200).json({ message: "Unfollow Successful" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+module.exports.likeBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: _blogId, likers } = res.locals.blog;
+    const { _id: _userId } = res.locals.user;
+    try {
+        const likeExist = yield Blog.findOne({
+            $and: [{ _id: _blogId }, { likers: _userId }],
+        });
+        if (likeExist)
+            return res.status(403).json({ message: "Already Liked" });
+        yield Blog.findByIdAndUpdate(_blogId, {
+            $push: { likers: _userId },
+            likes: likers.length + 1,
+        });
+        return res.status(200).json({ message: "Liked" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+module.exports.unlikeBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: _blogId, likers } = res.locals.blog;
+    const { _id: _userId } = res.locals.user;
+    try {
+        const likeExist = yield Blog.findOne({
+            $and: [{ _id: _blogId }, { likers: _userId }],
+        });
+        if (!likeExist)
+            return res.status(403).json({ message: "Not Liked" });
+        yield Blog.findByIdAndUpdate(_blogId, {
+            $pull: { likers: _userId },
+            likes: likers.length - 1,
+        });
+        return res.status(200).json({ message: "Unliked" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+module.exports.postComment = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: _blogId } = res.locals.blog;
+    const { _id: _userId } = res.locals.user;
+    const { comment } = req.body;
+    try {
+        yield Blog.findByIdAndUpdate(_blogId, {
+            $push: { comments: { commenter: _userId, comment } },
+        });
+        return res.status(200).json({ message: "Comment Successfull" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+module.exports.deleteComment = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: _blogId } = res.locals.blog;
+    const { _id: _userId } = res.locals.user;
+    const { comment } = req.body;
+    try {
+        yield Blog.findByIdAndUpdate(_blogId, {
+            $pull: { comments: { commenter: _userId, comment } },
+        });
+        return res.status(200).json({ message: "Comment Deleted Successfully" });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });

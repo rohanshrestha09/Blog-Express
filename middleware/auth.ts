@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
-const User = require("../model/User");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
+const User = require("../model/User");
+const Blog = require("../model/Blog");
 
 module.exports = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<any> => {
@@ -25,7 +26,10 @@ module.exports = asyncHandler(
       if (!user)
         return res.status(404).json({ message: "User does not exist" });
 
-      res.locals.user = user;
+      res.locals.user = {
+        ...user._doc,
+        blogs: await Blog.find({ author: new mongoose.Types.ObjectId(_id) }),
+      };
 
       next();
     } catch (err: any) {

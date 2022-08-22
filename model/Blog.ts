@@ -18,7 +18,7 @@ const BlogSchema = new Schema(
     likes: { type: Number, default: 0 },
     views: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
-    comments: [{ commenter: Schema.Types.ObjectId, content: String }],
+    comments: [{ commenter: Schema.Types.ObjectId, comment: String }],
   },
   { timestamps: true }
 );

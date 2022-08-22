@@ -8,15 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = __importDefault(require("mongoose"));
 const storage_1 = require("firebase/storage");
 const asyncHandler = require("express-async-handler");
 const Blog = require("../model/Blog");
-const User = require("../model/User");
 const storage = (0, storage_1.getStorage)();
 module.exports.getAllBlogs = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { sort, pageSize } = req.query;
@@ -36,6 +31,13 @@ module.exports.getAllBlogs = asyncHandler((req, res) => __awaiter(void 0, void 0
                         .limit(pageSize || 10),
                     message: "Blogs Fetched Successfully",
                 });
+            case "latest":
+                return res.status(200).json({
+                    blogs: yield Blog.find({})
+                        .sort({ createdAt: -1 })
+                        .limit(pageSize || 10),
+                    message: "Blogs Fetched Successfully",
+                });
             default:
                 return res.status(200).json({
                     blogs: yield Blog.find({}).limit(pageSize || 10),
@@ -48,11 +50,8 @@ module.exports.getAllBlogs = asyncHandler((req, res) => __awaiter(void 0, void 0
     }
 }));
 module.exports.getBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _blogId } = req.params;
+    const blog = res.locals.blog;
     try {
-        const blog = yield Blog.findById(new mongoose_1.default.Types.ObjectId(_blogId));
-        if (!blog)
-            return res.status(403).json({ message: "Blog does not exist" });
         return res
             .status(200)
             .json({ blog, message: "Blog Fetched Successfully" });
@@ -62,37 +61,32 @@ module.exports.getBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, vo
     }
 }));
 module.exports.postBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _authorId } = req.params;
+    const { _id: _authorId } = res.locals.user;
     const { title, content } = req.body;
     try {
         if (!title)
             return res.status(403).json({ message: "Title field missing" });
         if (!req.files)
             return res.status(403).json({ message: "Image required" });
-        const blog = yield Blog.create({
-            author: new mongoose_1.default.Types.ObjectId(_authorId),
+        const { _id: _blogId } = yield Blog.create({
+            author: _authorId,
             title,
             content,
         });
         const file = req.files.image;
         if (!file.mimetype.startsWith("image/"))
             return res.status(403).json({ message: "Please choose an image" });
-        const filename = file.mimetype.replace("image/", `${blog._id}.`);
+        const filename = file.mimetype.replace("image/", `${_blogId}.`);
         const storageRef = (0, storage_1.ref)(storage, `blogs/${filename}`);
         const metadata = {
             contentType: file.mimetype,
         };
         yield (0, storage_1.uploadBytes)(storageRef, file.data, metadata);
         const url = yield (0, storage_1.getDownloadURL)(storageRef);
-        yield Blog.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(blog._id), {
+        yield Blog.findByIdAndUpdate(_blogId, {
             image: url,
             imageName: filename,
         });
-        /*   await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_authorId), {
-          $push: {
-            blogs: await Blog.findById(new mongoose.Types.ObjectId(blog._id)),
-          },
-        }); */
         return res.status(200).json({ message: "Blog Posted Successfully" });
     }
     catch (err) {
@@ -100,58 +94,64 @@ module.exports.postBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, v
     }
 }));
 module.exports.updateBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _blogId } = req.params;
     const { title, content } = req.body;
+    const { _id: _blogId, image, imageName } = res.locals.blog;
     try {
         if (!title)
             return res.status(403).json({ message: "Title field missing" });
         if (!req.files)
             return res.status(403).json({ message: "Image required" });
-        const blog = yield Blog.findById(new mongoose_1.default.Types.ObjectId(_blogId));
-        /* await User.findByIdAndUpdate(new mongoose.Types.ObjectId(blog.author), {
-          $pull: {
-            blogs: blog,
-          },
-        }); */
         const file = req.files.image;
         if (!file.mimetype.startsWith("image/"))
             return res.status(403).json({ message: "Please choose an image" });
-        if (blog.image)
-            (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `blogs/${blog.imageName}`));
+        if (image)
+            (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `blogs/${imageName}`));
         const filename = file.mimetype.replace("image/", `${_blogId}.`);
         const storageRef = (0, storage_1.ref)(storage, `blogs/${filename}`);
         const metadata = {
             contentType: file.mimetype,
         };
         yield (0, storage_1.uploadBytes)(storageRef, file.data, metadata);
-        const url = (0, storage_1.getDownloadURL)(storageRef);
-        yield Blog.findByIdAndUpdate(new mongoose_1.default.Types.ObjectId(_blogId), {
+        const url = yield (0, storage_1.getDownloadURL)(storageRef);
+        yield Blog.findByIdAndUpdate(_blogId, {
             image: url,
             imageName: filename,
             title,
             content,
         });
-        /*   await User.findByIdAndUpdate(new mongoose.Types.ObjectId(_authorId), {
-          $push: {
-            blogs: await Blog.findById(new mongoose.Types.ObjectId(_blogId)),
-          },
-        }); */
-        return res.status(200).json({ message: "Blog Posted Successfully" });
+        return res.status(200).json({ message: "Blog Updated Successfully" });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
     }
 }));
 module.exports.deleteBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _blogId } = req.params;
+    const { _id: _blogId, image, imageName } = res.locals.blog;
     try {
-        const blog = yield Blog.findById(new mongoose_1.default.Types.ObjectId(_blogId));
-        if (!blog)
-            return res.status(403).json({ message: "Blog does not exist" });
-        if (blog.image)
-            (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `blogs/${blog.imageName}`));
-        yield Blog.findByIdAndDelete(new mongoose_1.default.Types.ObjectId(_blogId));
+        if (image)
+            (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `blogs/${imageName}`));
+        yield Blog.findByIdAndDelete(_blogId);
         return res.status(200).json({ message: "Blog Deleted Successfully" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+module.exports.publishBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: _blogId } = res.locals.blog;
+    try {
+        yield Blog.findByIdAndUpdate(_blogId, { isPublished: true });
+        return res.status(200).json({ message: "Blog Published Successfully" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+module.exports.unpublishBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: _blogId } = res.locals.blog;
+    try {
+        yield Blog.findByIdAndUpdate(_blogId, { isPublished: false });
+        return res.status(200).json({ message: "Blog Unpubished Successfully" });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });

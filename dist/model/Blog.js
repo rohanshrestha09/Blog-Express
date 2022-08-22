@@ -18,6 +18,6 @@ const BlogSchema = new mongoose_1.Schema({
     likes: { type: Number, default: 0 },
     views: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
-    comments: [{ commenter: mongoose_1.Schema.Types.ObjectId, content: String }],
+    comments: [{ commenter: mongoose_1.Schema.Types.ObjectId, comment: String }],
 }, { timestamps: true });
 module.exports = (0, mongoose_1.model)("Blog", BlogSchema);

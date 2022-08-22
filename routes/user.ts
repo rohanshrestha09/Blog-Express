@@ -13,20 +13,24 @@ const auth = require("../middleware/auth");
 
 const passwordValidator = require("../middleware/passwordValidator");
 
+const userValidator = require("../middleware/userValidator");
+
 const router: Router = express.Router();
 
 router.post("/register", register);
 
 router.post("/login", login);
 
-router.get("/auth", auth, authSuccess);
+router.use(auth);
 
-router.get("/profile/:_userId", auth, getProfile);
+router.get("/auth", authSuccess);
 
-router.put("/profile/:_userId", auth, passwordValidator, updateProfile);
+router.get("/profile/:_queryUserId", userValidator, getProfile);
 
-router.delete("/profile/:_userId", auth, passwordValidator, deleteProfile);
+router.put("/profile", passwordValidator, updateProfile);
 
-router.delete("/profile/image/:_userId", auth, deleteProfileImage);
+router.delete("/profile", passwordValidator, deleteProfile);
+
+router.delete("/profile/image", deleteProfileImage);
 
 module.exports = router;
