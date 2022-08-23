@@ -33,7 +33,7 @@ module.exports.resetLink = asyncHandler(
         port: "465",
       });
 
-      const info = await transporter.sendMail({
+      await transporter.sendMail({
         from: '"Do not reply to this email (via BlogSansar)" <blogsansar0@gmail.com>',
         to: email,
         subject: "Password Reset Link",
@@ -42,8 +42,6 @@ module.exports.resetLink = asyncHandler(
           <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
         `,
       });
-
-      await transporter.sendMail(info);
 
       return res.status(200).json({
         passwordResetLink: resetUrl,

@@ -36,7 +36,7 @@ module.exports.resetLink = asyncHandler((req, res) => __awaiter(void 0, void 0, 
             },
             port: "465",
         });
-        const info = yield transporter.sendMail({
+        yield transporter.sendMail({
             from: '"Do not reply to this email (via BlogSansar)" <blogsansar0@gmail.com>',
             to: email,
             subject: "Password Reset Link",
@@ -45,7 +45,6 @@ module.exports.resetLink = asyncHandler((req, res) => __awaiter(void 0, void 0, 
           <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
         `,
         });
-        yield transporter.sendMail(info);
         return res.status(200).json({
             passwordResetLink: resetUrl,
         });
