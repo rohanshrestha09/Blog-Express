@@ -27,6 +27,8 @@ const UserSchema = new mongoose_1.Schema({
     },
     image: String,
     imageName: String,
+    bookmarks: [{ type: mongoose_1.Schema.Types.ObjectId, default: [] }],
+    blogs: [{ type: mongoose_1.Schema.Types.ObjectId, default: [] }],
     bio: String,
     following: [mongoose_1.Schema.Types.ObjectId],
     followers: [mongoose_1.Schema.Types.ObjectId],

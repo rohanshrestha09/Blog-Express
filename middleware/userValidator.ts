@@ -18,7 +18,8 @@ module.exports = asyncHandler(
 
       res.locals.queryUser = {
         ...queryUser._doc,
-        blogs: await Blog.find({ author: _queryUserId }),
+        blogs: await Blog.find({ _id: queryUser.blogs }),
+        bookmarks: await Blog.find({ _id: queryUser.bookmarks }),
       };
 
       next();

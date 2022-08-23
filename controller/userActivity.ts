@@ -103,7 +103,8 @@ module.exports.unlikeBlog = asyncHandler(
         $and: [{ _id: _blogId }, { likers: _userId }],
       });
 
-      if (!likeExist) return res.status(403).json({ message: "Not Liked" });
+      if (!likeExist)
+        return res.status(403).json({ message: "ALready Unliked" });
 
       await Blog.findByIdAndUpdate(_blogId, {
         $pull: { likers: _userId },
@@ -150,6 +151,50 @@ module.exports.deleteComment = asyncHandler(
       });
 
       return res.status(200).json({ message: "Comment Deleted Successfully" });
+    } catch (err: any) {
+      return res.status(404).json({ message: err.message });
+    }
+  }
+);
+
+module.exports.bookmarkBlog = asyncHandler(
+  async (req: Request, res: Response): Promise<Response> => {
+    const { _id: _blogId } = res.locals.blog;
+
+    const { _id: _userId } = res.locals.user;
+    try {
+      const bookmarkExist = await User.findOne({
+        $and: [{ _id: _userId }, { bookmarks: _blogId }],
+      });
+
+      if (bookmarkExist)
+        return res.status(403).json({ message: "Already Bookmarked" });
+
+      await User.findByIdAndUpdate(_userId, { $push: { bookmarks: _blogId } });
+
+      return res.status(200).json({ message: "Bookmarked Successfully" });
+    } catch (err: any) {
+      return res.status(404).json({ message: err.message });
+    }
+  }
+);
+
+module.exports.unbookmarkBlog = asyncHandler(
+  async (req: Request, res: Response): Promise<Response> => {
+    const { _id: _blogId } = res.locals.blog;
+
+    const { _id: _userId } = res.locals.user;
+    try {
+      const bookmarkExist = await User.findOne({
+        $and: [{ _id: _userId }, { bookmarks: _blogId }],
+      });
+
+      if (!bookmarkExist)
+        return res.status(403).json({ message: "Already Unbookmarked" });
+
+      await User.findByIdAndUpdate(_userId, { $pull: { bookmarks: _blogId } });
+
+      return res.status(200).json({ message: "Unbookmarked Successfully" });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }

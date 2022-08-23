@@ -7,6 +7,8 @@ const {
   unlikeBlog,
   postComment,
   deleteComment,
+  bookmarkBlog,
+  unbookmarkBlog,
 } = require("../controller/userActivity");
 
 const auth = require("../middleware/auth");
@@ -18,7 +20,12 @@ const blogValidator = require("../middleware/blogValidator");
 const router: Router = express.Router();
 
 router.use(
-  ["/follow/:_queryUserId", "/blog/:_blogId/like", "/blog/:_blogId/comment"],
+  [
+    "/follow/:_queryUserId",
+    "/blog/:_blogId/like",
+    "/blog/:_blogId/comment",
+    "/blog/:_blogId/bookmark",
+  ],
   auth
 );
 
@@ -33,5 +40,9 @@ router.delete("/blog/:_blogId/like", blogValidator, unlikeBlog);
 router.post("/blog/:_blogId/comment", blogValidator, postComment);
 
 router.delete("/blog/:_blogId/comment", blogValidator, deleteComment);
+
+router.post("/blog/:_blogId/bookmark", blogValidator, bookmarkBlog);
+
+router.delete("/blog/:_blogId/bookmark", blogValidator, unbookmarkBlog);
 
 module.exports = router;

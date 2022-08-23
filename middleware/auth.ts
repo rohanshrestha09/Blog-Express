@@ -28,7 +28,8 @@ module.exports = asyncHandler(
 
       res.locals.user = {
         ...user._doc,
-        blogs: await Blog.find({ author: new mongoose.Types.ObjectId(_id) }),
+        blogs: await Blog.find({ _id: user.blogs }),
+        bookmarks: await Blog.find({ _id: user.bookmarks }),
       };
 
       next();

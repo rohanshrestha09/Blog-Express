@@ -27,6 +27,8 @@ const UserSchema = new Schema(
     },
     image: String,
     imageName: String,
+    bookmarks: [{ type: Schema.Types.ObjectId, default: [] }],
+    blogs: [{ type: Schema.Types.ObjectId, default: [] }],
     bio: String,
     following: [Schema.Types.ObjectId],
     followers: [Schema.Types.ObjectId],

@@ -372,13 +372,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/profile/630314fed56e6185816f1a68",
+							"raw": "{{baseUrl}}/profile/63035303d350acbc616d29d2",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"profile",
-								"630314fed56e6185816f1a68"
+								"63035303d350acbc616d29d2"
 							]
 						}
 					},
@@ -1228,18 +1228,18 @@
 								{
 									"key": "image",
 									"type": "file",
-									"src": "/C:/Users/shres/Downloads/IMG_20220817_141638.jpg"
+									"src": "/C:/Users/shres/Downloads/image.png"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{baseUrl}}/blog/6300e17d054847908cbda2e5",
+							"raw": "{{baseUrl}}/blog/",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"blog",
-								"6300e17d054847908cbda2e5"
+								""
 							]
 						}
 					},
@@ -1339,7 +1339,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/blog?sort=likes&pageSize=1",
+							"raw": "{{baseUrl}}/blog?sort=likes&pageSize=2",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -1353,7 +1353,7 @@
 								},
 								{
 									"key": "pageSize",
-									"value": "1"
+									"value": "2"
 								}
 							]
 						}
@@ -2007,6 +2007,184 @@
 							"body": "{\n    \"message\": \"Not Liked\"\n}"
 						}
 					]
+				},
+				{
+					"name": "Bookmark Blog",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/blog/6304b78de70871d8cdfc2e8e/bookmark",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"blog",
+								"6304b78de70871d8cdfc2e8e",
+								"bookmark"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Bookmark Blog",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/blog/6304b78de70871d8cdfc2e8e/bookmark",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"blog",
+										"6304b78de70871d8cdfc2e8e",
+										"bookmark"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "93"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "881"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "32"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"20-XKg2LIrc5zKnuPnHjZmQZs+5esY\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 23 Aug 2022 11:23:36 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Already Bookmarked\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Remove Bookmark",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/blog/6304b78de70871d8cdfc2e8e/bookmark",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"blog",
+								"6304b78de70871d8cdfc2e8e",
+								"bookmark"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Remove Bookmark",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/blog/6304b78de70871d8cdfc2e8e/bookmark",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"blog",
+										"6304b78de70871d8cdfc2e8e",
+										"bookmark"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "RateLimit-Limit",
+									"value": "100"
+								},
+								{
+									"key": "RateLimit-Remaining",
+									"value": "95"
+								},
+								{
+									"key": "RateLimit-Reset",
+									"value": "888"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "34"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"22-jRdcHGjV/T1zi3u5fFZ4lZjBBEY\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 23 Aug 2022 11:23:29 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Already Unbookmarked\"\n}"
+						}
+					]
 				}
 			]
 		},
@@ -2032,11 +2210,12 @@
 							]
 						},
 						"url": {
-							"raw": "{{baseUrl}}/reset-password",
+							"raw": "{{baseUrl}}/security/reset-password",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
+								"security",
 								"reset-password"
 							]
 						}
@@ -2137,11 +2316,12 @@
 							]
 						},
 						"url": {
-							"raw": "{{baseUrl}}/reset-password/630314fed56e6185816f1a68/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MzAzMTRmZWQ1NmU2MTg1ODE2ZjFhNjgiLCJpYXQiOjE2NjExNjgyMzIsImV4cCI6MTY2MTE2OTEzMn0.0WFxAPareAXuJJPDKKC_OS-km8KRn9u9x8fWRsWwejQ",
+							"raw": "{{baseUrl}}/security/reset-password/630314fed56e6185816f1a68/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MzAzMTRmZWQ1NmU2MTg1ODE2ZjFhNjgiLCJpYXQiOjE2NjExNjgyMzIsImV4cCI6MTY2MTE2OTEzMn0.0WFxAPareAXuJJPDKKC_OS-km8KRn9u9x8fWRsWwejQ",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
+								"security",
 								"reset-password",
 								"630314fed56e6185816f1a68",
 								"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MzAzMTRmZWQ1NmU2MTg1ODE2ZjFhNjgiLCJpYXQiOjE2NjExNjgyMzIsImV4cCI6MTY2MTE2OTEzMn0.0WFxAPareAXuJJPDKKC_OS-km8KRn9u9x8fWRsWwejQ"
@@ -2229,6 +2409,44 @@
 							"body": "{\n    \"message\": \"invalid signature\"\n}"
 						}
 					]
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "password",
+									"value": "rohan123",
+									"type": "text"
+								},
+								{
+									"key": "newPassword",
+									"value": "rohan123",
+									"type": "text"
+								},
+								{
+									"key": "confirmNewPassword",
+									"value": "rohan123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/security/change-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"security",
+								"change-password"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}

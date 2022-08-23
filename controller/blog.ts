@@ -8,6 +8,7 @@ import {
 } from "firebase/storage";
 const asyncHandler = require("express-async-handler");
 const Blog = require("../model/Blog");
+const User = require("../model/User");
 
 const storage = getStorage();
 
@@ -108,6 +109,8 @@ module.exports.postBlog = asyncHandler(
         imageName: filename,
       });
 
+      await User.findByIdAndUpdate(_authorId, { $push: { blogs: _blogId } });
+
       return res.status(200).json({ message: "Blog Posted Successfully" });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
@@ -165,10 +168,14 @@ module.exports.deleteBlog = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     const { _id: _blogId, image, imageName } = res.locals.blog;
 
+    const { _id: _authorId } = res.locals.user;
+
     try {
       if (image) deleteObject(ref(storage, `blogs/${imageName}`));
 
       await Blog.findByIdAndDelete(_blogId);
+
+      await User.findByIdAndUpdate(_authorId, { $pull: { blogs: _blogId } });
 
       return res.status(200).json({ message: "Blog Deleted Successfully" });
     } catch (err: any) {

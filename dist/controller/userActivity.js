@@ -85,7 +85,7 @@ module.exports.unlikeBlog = asyncHandler((req, res) => __awaiter(void 0, void 0,
             $and: [{ _id: _blogId }, { likers: _userId }],
         });
         if (!likeExist)
-            return res.status(403).json({ message: "Not Liked" });
+            return res.status(403).json({ message: "ALready Unliked" });
         yield Blog.findByIdAndUpdate(_blogId, {
             $pull: { likers: _userId },
             likes: likers.length - 1,
@@ -119,6 +119,38 @@ module.exports.deleteComment = asyncHandler((req, res) => __awaiter(void 0, void
             $pull: { comments: { commenter: _userId, comment } },
         });
         return res.status(200).json({ message: "Comment Deleted Successfully" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+module.exports.bookmarkBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: _blogId } = res.locals.blog;
+    const { _id: _userId } = res.locals.user;
+    try {
+        const bookmarkExist = yield User.findOne({
+            $and: [{ _id: _userId }, { bookmarks: _blogId }],
+        });
+        if (bookmarkExist)
+            return res.status(403).json({ message: "Already Bookmarked" });
+        yield User.findByIdAndUpdate(_userId, { $push: { bookmarks: _blogId } });
+        return res.status(200).json({ message: "Bookmarked Successfully" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+module.exports.unbookmarkBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: _blogId } = res.locals.blog;
+    const { _id: _userId } = res.locals.user;
+    try {
+        const bookmarkExist = yield User.findOne({
+            $and: [{ _id: _userId }, { bookmarks: _blogId }],
+        });
+        if (!bookmarkExist)
+            return res.status(403).json({ message: "Already Unbookmarked" });
+        yield User.findByIdAndUpdate(_userId, { $pull: { bookmarks: _blogId } });
+        return res.status(200).json({ message: "Unbookmarked Successfully" });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });

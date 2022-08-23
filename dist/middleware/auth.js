@@ -29,7 +29,7 @@ module.exports = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void
         const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("-password");
         if (!user)
             return res.status(404).json({ message: "User does not exist" });
-        res.locals.user = Object.assign(Object.assign({}, user._doc), { blogs: yield Blog.find({ author: new mongoose_1.default.Types.ObjectId(_id) }) });
+        res.locals.user = Object.assign(Object.assign({}, user._doc), { blogs: yield Blog.find({ _id: user.blogs }), bookmarks: yield Blog.find({ _id: user.bookmarks }) });
         next();
     }
     catch (err) {
