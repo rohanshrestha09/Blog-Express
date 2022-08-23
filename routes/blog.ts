@@ -15,20 +15,20 @@ const blogValidator = require("../middleware/blogValidator");
 
 const router: Router = express.Router();
 
-router.use(auth);
-
 router.get("/blog", getAllBlogs);
 
-router.post("/blog", postBlog);
+router.use(["/blog/:_blogId", "/blog/:_blogId/publish"], auth, blogValidator);
 
-router.get("/blog/:_blogId", blogValidator, getBlog);
+router.post("/blog", auth, postBlog);
 
-router.put("/blog/:_blogId", blogValidator, updateBlog);
+router.get("/blog/:_blogId", getBlog);
 
-router.delete("/blog/:_blogId", blogValidator, deleteBlog);
+router.put("/blog/:_blogId", updateBlog);
 
-router.post("/blog/:_blogId/publish", blogValidator, publishBlog);
+router.delete("/blog/:_blogId", deleteBlog);
 
-router.delete("/blog/:_blogId/publish", blogValidator, unpublishBlog);
+router.post("/blog/:_blogId/publish", publishBlog);
+
+router.delete("/blog/:_blogId/publish", unpublishBlog);
 
 module.exports = router;

@@ -17,7 +17,10 @@ const blogValidator = require("../middleware/blogValidator");
 
 const router: Router = express.Router();
 
-router.use(auth);
+router.use(
+  ["/follow/:_queryUserId", "/blog/:_blogId/like", "/blog/:_blogId/comment"],
+  auth
+);
 
 router.post("/follow/:_queryUserId", userValidator, follow);
 

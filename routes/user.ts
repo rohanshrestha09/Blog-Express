@@ -21,11 +21,11 @@ router.post("/register", register);
 
 router.post("/login", login);
 
-router.use(auth);
+router.get("/profile/:_queryUserId", userValidator, getProfile);
+
+router.use(["/auth", "/profile", "/profile/image"], auth);
 
 router.get("/auth", authSuccess);
-
-router.get("/profile/:_queryUserId", userValidator, getProfile);
 
 router.put("/profile", passwordValidator, updateProfile);
 

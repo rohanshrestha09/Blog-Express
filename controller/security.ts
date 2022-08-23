@@ -21,26 +21,32 @@ module.exports.resetLink = asyncHandler(
         { expiresIn: "15min" }
       );
 
-      /* const transporter = nodemailer.createTransport({
+      const resetUrl = `https://blogsansar.vercel.app/security/reset-password/${user._id}/${token}`;
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
         host: "smtp.gmail.com",
         auth: {
           user: process.env.MAILING_EMAIL,
-          pass: process.env.MAILING_PASSWORD,
+          pass: process.env.APP_PASSWORD,
         },
+        port: "465",
       });
 
       const info = await transporter.sendMail({
-        from: '"don't reply 123" <blogsansar0@gmail.com>',
+        from: '"Do not reply to this email (via BlogSansar)" <blogsansar0@gmail.com>',
         to: email,
         subject: "Password Reset Link",
-        text: "Link",
-        html: `<a href={{baseUrl}}/reset-password"/${user._id}/${token}>{{baseUrl}}/reset-password"/${user._id}/${token}</a>`,
+        html: `
+          <h1>Click on the link below to reset your password</h1>
+          <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+        `,
       });
 
-      await transporter.sendMail(info);*/
+      await transporter.sendMail(info);
 
       return res.status(200).json({
-        passwordResetLink: `{{baseUrl}}/reset-password"/${user._id}/${token}`,
+        passwordResetLink: resetUrl,
       });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
@@ -58,7 +64,7 @@ module.exports.resetPassword = asyncHandler(
 
     if (!token) return res.status(403).json({ message: "Invalid token" });
 
-    if (password < 8)
+    if (!password || password < 8)
       return res
         .status(403)
         .json({ message: "Password must contain atleast 8 characters" });
@@ -82,6 +88,34 @@ module.exports.resetPassword = asyncHandler(
       });
 
       return res.status(200).json({ message: "Password Reset Successful" });
+    } catch (err: any) {
+      return res.status(404).json({ message: err.message });
+    }
+  }
+);
+
+export const changePassword = asyncHandler(
+  async (req: Request, res: Response): Promise<Response> => {
+    const { newPassword, confirmNewPassword } = req.body;
+
+    const { _id: _userId } = res.locals.user;
+
+    if (!newPassword || newPassword < 8)
+      return res
+        .status(403)
+        .json({ message: "Password must contain atleast 8 characters." });
+
+    if (newPassword !== confirmNewPassword)
+      return res.status(403).json({ message: "Password does not match" });
+
+    try {
+      const salt = await bcrypt.genSalt(10);
+
+      const encryptedPassword: string = await bcrypt.hash(newPassword, salt);
+
+      await User.findByIdAndUpdate(_userId, { password: encryptedPassword });
+
+      return res.status(200).json({ message: "Password Change Successful" });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }

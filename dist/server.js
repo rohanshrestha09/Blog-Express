@@ -36,8 +36,8 @@ const limiter = rateLimit({
     legacyHeaders: false,
 });
 app.use(limiter);
-app.use("/api", require("./routes/resetPassword"));
 app.use("/api", require("./routes/user"));
+app.use("/api", require("./routes/security"));
 app.use("/api", require("./routes/blog"));
 app.use("/api", require("./routes/userActivity"));
 app.listen(PORT);

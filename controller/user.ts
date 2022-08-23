@@ -27,13 +27,13 @@ module.exports.register = asyncHandler(
           .status(403)
           .json({ message: "User already exists. Choose a different email." });
 
-      if (password !== confirmPassword)
-        return res.status(403).json({ message: "Password does not match." });
-
-      if (password < 8)
+      if (!password || password < 8)
         return res
           .status(403)
           .json({ message: "Password must contain atleast 8 characters." });
+
+      if (password !== confirmPassword)
+        return res.status(403).json({ message: "Password does not match." });
 
       const salt = await bcrypt.genSalt(10);
 

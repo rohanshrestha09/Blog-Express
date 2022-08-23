@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.changePassword = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const asyncHandler = require("express-async-handler");
 const nodemailer = require("nodemailer");
@@ -25,25 +26,28 @@ module.exports.resetLink = asyncHandler((req, res) => __awaiter(void 0, void 0, 
         if (!user)
             return res.status(404).json({ message: "Invalid Email" });
         const token = jwt.sign({ _id: user._id }, `${process.env.JWT_PASSWORD}${user.password}`, { expiresIn: "15min" });
-        /* const transporter = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          auth: {
-            user: process.env.MAILING_EMAIL,
-            pass: process.env.MAILING_PASSWORD,
-          },
+        const resetUrl = `https://blogsansar.vercel.app/security/reset-password/${user._id}/${token}`;
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            host: "smtp.gmail.com",
+            auth: {
+                user: process.env.MAILING_EMAIL,
+                pass: process.env.APP_PASSWORD,
+            },
+            port: "465",
         });
-  
-        const info = await transporter.sendMail({
-          from: '"don't reply 123" <blogsansar0@gmail.com>',
-          to: email,
-          subject: "Password Reset Link",
-          text: "Link",
-          html: `<a href={{baseUrl}}/reset-password"/${user._id}/${token}>{{baseUrl}}/reset-password"/${user._id}/${token}</a>`,
+        const info = yield transporter.sendMail({
+            from: '"Do not reply to this email (via BlogSansar)" <blogsansar0@gmail.com>',
+            to: email,
+            subject: "Password Reset Link",
+            html: `
+          <h1>Click on the link below to reset your password</h1>
+          <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+        `,
         });
-  
-        await transporter.sendMail(info);*/
+        yield transporter.sendMail(info);
         return res.status(200).json({
-            passwordResetLink: `{{baseUrl}}/reset-password"/${user._id}/${token}`,
+            passwordResetLink: resetUrl,
         });
     }
     catch (err) {
@@ -56,7 +60,7 @@ module.exports.resetPassword = asyncHandler((req, res) => __awaiter(void 0, void
     const { password } = req.body;
     if (!token)
         return res.status(403).json({ message: "Invalid token" });
-    if (password < 8)
+    if (!password || password < 8)
         return res
             .status(403)
             .json({ message: "Password must contain atleast 8 characters" });
@@ -69,6 +73,25 @@ module.exports.resetPassword = asyncHandler((req, res) => __awaiter(void 0, void
             password: encryptedPassword,
         });
         return res.status(200).json({ message: "Password Reset Successful" });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+exports.changePassword = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { newPassword, confirmNewPassword } = req.body;
+    const { _id: _userId } = res.locals.user;
+    if (!newPassword || newPassword < 8)
+        return res
+            .status(403)
+            .json({ message: "Password must contain atleast 8 characters." });
+    if (newPassword !== confirmNewPassword)
+        return res.status(403).json({ message: "Password does not match" });
+    try {
+        const salt = yield bcrypt.genSalt(10);
+        const encryptedPassword = yield bcrypt.hash(newPassword, salt);
+        yield User.findByIdAndUpdate(_userId, { password: encryptedPassword });
+        return res.status(200).json({ message: "Password Change Successful" });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });

@@ -9,7 +9,7 @@ const auth = require("../middleware/auth");
 const userValidator = require("../middleware/userValidator");
 const blogValidator = require("../middleware/blogValidator");
 const router = express_1.default.Router();
-router.use(auth);
+router.use(["/follow/:_queryUserId", "/blog/:_blogId/like", "/blog/:_blogId/comment"], auth);
 router.post("/follow/:_queryUserId", userValidator, follow);
 router.delete("/follow/:_queryUserId", userValidator, unfollow);
 router.post("/blog/:_blogId/like", blogValidator, likeBlog);

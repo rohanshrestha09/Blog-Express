@@ -23,12 +23,12 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
             return res
                 .status(403)
                 .json({ message: "User already exists. Choose a different email." });
-        if (password !== confirmPassword)
-            return res.status(403).json({ message: "Password does not match." });
-        if (password < 8)
+        if (!password || password < 8)
             return res
                 .status(403)
                 .json({ message: "Password must contain atleast 8 characters." });
+        if (password !== confirmPassword)
+            return res.status(403).json({ message: "Password does not match." });
         const salt = yield bcrypt.genSalt(10);
         const encryptedPassword = yield bcrypt.hash(password, salt);
         const { _id: _userId } = yield User.create({
