@@ -23,7 +23,7 @@ module.exports = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void
     if (authorization && authorization.startsWith("Bearer"))
         token = authorization.split(" ")[1];
     if (!token)
-        return res.status(403).json({ message: "Not authorised" });
+        return res.status(401).json({ message: "Not authorised" });
     try {
         const { _id } = jwt.verify(token, process.env.JWT_TOKEN);
         const user = yield User.findById(new mongoose_1.default.Types.ObjectId(_id)).select("-password");

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const misc_1 = require("../misc/misc");
 const BlogSchema = new mongoose_1.Schema({
     author: { type: mongoose_1.Schema.Types.ObjectId, required: [true, "Author missing"] },
     image: String,
@@ -14,8 +15,22 @@ const BlogSchema = new mongoose_1.Schema({
         required: [true, "Content missing"],
         minLength: [20, "Content must contain atleast 20 characters"],
     },
+    genre: {
+        type: [String],
+        validate: [
+            function arrayLimit(val) {
+                return val.length <= 5;
+            },
+            "Only 5 genre allowed",
+        ],
+        enum: {
+            values: misc_1.genre,
+            message: "{VALUE} not supported",
+        },
+    },
     likers: [mongoose_1.Schema.Types.ObjectId],
     likes: { type: Number, default: 0 },
+    viewers: [mongoose_1.Schema.Types.ObjectId],
     views: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
     comments: [{ commenter: mongoose_1.Schema.Types.ObjectId, comment: String }],

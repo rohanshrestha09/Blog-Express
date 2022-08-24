@@ -14,7 +14,7 @@ module.exports = asyncHandler(
     if (authorization && authorization.startsWith("Bearer"))
       token = authorization.split(" ")[1];
 
-    if (!token) return res.status(403).json({ message: "Not authorised" });
+    if (!token) return res.status(401).json({ message: "Not authorised" });
 
     try {
       const { _id } = jwt.verify(token, process.env.JWT_TOKEN);

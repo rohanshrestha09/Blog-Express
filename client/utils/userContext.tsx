@@ -1,7 +1,8 @@
 import { createContext } from "react";
 
 interface context {
-  storage: any;
+  userInfo?: Response;
+  userLogout: () => void;
 }
 
 const userContext = createContext<context | null>(null);

@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const { follow, unfollow, likeBlog, unlikeBlog, postComment, deleteComment, bookmarkBlog, unbookmarkBlog, } = require("../controller/userActivity");
+const { follow, unfollow, likeBlog, unlikeBlog, postComment, deleteComment, bookmarkBlog, unbookmarkBlog, viewsBlog, } = require("../controller/userActivity");
 const auth = require("../middleware/auth");
 const userValidator = require("../middleware/userValidator");
 const blogValidator = require("../middleware/blogValidator");
@@ -23,4 +23,5 @@ router.post("/blog/:_blogId/comment", blogValidator, postComment);
 router.delete("/blog/:_blogId/comment", blogValidator, deleteComment);
 router.post("/blog/:_blogId/bookmark", blogValidator, bookmarkBlog);
 router.delete("/blog/:_blogId/bookmark", blogValidator, unbookmarkBlog);
+router.post("/blog/__blogId/views", blogValidator, viewsBlog);
 module.exports = router;

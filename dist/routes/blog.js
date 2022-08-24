@@ -4,11 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const { getAllBlogs, getBlog, postBlog, updateBlog, deleteBlog, publishBlog, unpublishBlog, } = require("../controller/blog");
+const { getAllBlogs, getCategorisedBlog, getBlog, postBlog, updateBlog, deleteBlog, publishBlog, unpublishBlog, } = require("../controller/blog");
 const auth = require("../middleware/auth");
 const blogValidator = require("../middleware/blogValidator");
 const router = express_1.default.Router();
 router.get("/blog", getAllBlogs);
+router.get("/blog/categorised", getCategorisedBlog);
 router.use(["/blog/:_blogId", "/blog/:_blogId/publish"], auth, blogValidator);
 router.post("/blog", auth, postBlog);
 router.get("/blog/:_blogId", getBlog);

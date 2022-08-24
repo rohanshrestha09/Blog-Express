@@ -200,3 +200,28 @@ module.exports.unbookmarkBlog = asyncHandler(
     }
   }
 );
+
+module.exports.viewsBlog = asyncHandler(
+  async (req: Request, res: Response): Promise<Response> => {
+    const { _id: _blogId, viewers } = res.locals.blog;
+
+    const { _id: _userId } = res.locals.user;
+
+    try {
+      const viewersExist = await Blog.findOne({
+        $and: [{ _id: _blogId }, { viewers: _userId }],
+      });
+
+      if (viewersExist) return res.status(201);
+
+      await Blog.findByIdAndUpdate(_blogId, {
+        $push: { viewers: _userId },
+        views: viewers.length + 1,
+      });
+
+      return res.status(200).json({ message: "Success" });
+    } catch (err: any) {
+      return res.status(404).json({ message: err.message });
+    }
+  }
+);

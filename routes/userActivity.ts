@@ -9,6 +9,7 @@ const {
   deleteComment,
   bookmarkBlog,
   unbookmarkBlog,
+  viewsBlog,
 } = require("../controller/userActivity");
 
 const auth = require("../middleware/auth");
@@ -44,5 +45,7 @@ router.delete("/blog/:_blogId/comment", blogValidator, deleteComment);
 router.post("/blog/:_blogId/bookmark", blogValidator, bookmarkBlog);
 
 router.delete("/blog/:_blogId/bookmark", blogValidator, unbookmarkBlog);
+
+router.post("/blog/__blogId/views", blogValidator, viewsBlog);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { genre } from "../misc/misc";
 
 const BlogSchema = new Schema(
   {
@@ -14,8 +15,22 @@ const BlogSchema = new Schema(
       required: [true, "Content missing"],
       minLength: [20, "Content must contain atleast 20 characters"],
     },
+    genre: {
+      type: [String],
+      validate: [
+        function arrayLimit(val: any) {
+          return val.length <= 5;
+        },
+        "Only 5 genre allowed",
+      ],
+      enum: {
+        values: genre as Array<String>,
+        message: "{VALUE} not supported",
+      },
+    },
     likers: [Schema.Types.ObjectId],
     likes: { type: Number, default: 0 },
+    viewers: [Schema.Types.ObjectId],
     views: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
     comments: [{ commenter: Schema.Types.ObjectId, comment: String }],

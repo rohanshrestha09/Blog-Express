@@ -1,6 +1,7 @@
 import express, { Router } from "express";
 const {
   getAllBlogs,
+  getCategorisedBlog,
   getBlog,
   postBlog,
   updateBlog,
@@ -16,6 +17,8 @@ const blogValidator = require("../middleware/blogValidator");
 const router: Router = express.Router();
 
 router.get("/blog", getAllBlogs);
+
+router.get("/blog/categorised", getCategorisedBlog);
 
 router.use(["/blog/:_blogId", "/blog/:_blogId/publish"], auth, blogValidator);
 

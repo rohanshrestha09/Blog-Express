@@ -54,6 +54,48 @@ module.exports.getAllBlogs = asyncHandler(
   }
 );
 
+module.exports.getCategorisedBlog = asyncHandler(
+  async (req: Request, res: Response): Promise<Response> => {
+    const { genre, sort, pageSize } = req.query;
+
+    try {
+      switch (sort) {
+        case "likes":
+          return res.status(200).json({
+            blogs: await Blog.find({ genre })
+              .sort({ likes: -1 })
+              .limit(pageSize || 10),
+            message: "Blogs Fetched Successfully",
+          });
+
+        case "views":
+          return res.status(200).json({
+            blogs: await Blog.find({ genre })
+              .sort({ views: -1 })
+              .limit(pageSize || 10),
+            message: "Blogs Fetched Successfully",
+          });
+
+        case "latest":
+          return res.status(200).json({
+            blogs: await Blog.find({ genre })
+              .sort({ createdAt: -1 })
+              .limit(pageSize || 10),
+            message: "Blogs Fetched Successfully",
+          });
+
+        default:
+          return res.status(200).json({
+            blogs: await Blog.find({ genre }).limit(pageSize || 10),
+            message: "Blogs Fetched Successfully",
+          });
+      }
+    } catch (err: any) {
+      return res.status(404).json({ message: err.message });
+    }
+  }
+);
+
 module.exports.getBlog = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     const blog = res.locals.blog;
@@ -72,12 +114,9 @@ module.exports.postBlog = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     const { _id: _authorId } = res.locals.user;
 
-    const { title, content } = req.body;
+    const { title, content, genre } = req.body;
 
     try {
-      if (!title)
-        return res.status(403).json({ message: "Title field missing" });
-
       if (!req.files)
         return res.status(403).json({ message: "Image required" });
 
@@ -85,6 +124,7 @@ module.exports.postBlog = asyncHandler(
         author: _authorId,
         title,
         content,
+        genre,
       });
 
       const file = req.files.image as any;
@@ -120,14 +160,11 @@ module.exports.postBlog = asyncHandler(
 
 module.exports.updateBlog = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
-    const { title, content } = req.body;
-
     const { _id: _blogId, image, imageName } = res.locals.blog;
 
-    try {
-      if (!title)
-        return res.status(403).json({ message: "Title field missing" });
+    const { title, content, genre } = req.body;
 
+    try {
       if (!req.files)
         return res.status(403).json({ message: "Image required" });
 
@@ -155,6 +192,7 @@ module.exports.updateBlog = asyncHandler(
         imageName: filename,
         title,
         content,
+        genre,
       });
 
       return res.status(200).json({ message: "Blog Updated Successfully" });
