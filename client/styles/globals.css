@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Megrim&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +8,7 @@
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
-  background-color: transparent;
+  background-color: inherit;
 }
 
 ::-webkit-scrollbar-track {
@@ -23,4 +24,8 @@
 /* scrollbar Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(170 170 170 / 0.5);
+}
+
+.scrollbar::-webkit-scrollbar {
+  background-color: transparent;
 }

@@ -1,29 +1,23 @@
 import type { NextPage } from "next";
-import { useState, useEffect } from "react";
 import Head from "next/head";
-import AppLayout from "../components/AppLayout";
-import Signup from "../components/Signup";
 
 const Home: NextPage = () => {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => setHasMounted(true), []);
-
-  if (!hasMounted) return null;
-
   return (
-    <AppLayout>
+    <div>
       <Head>
         <title>Create Next App</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <label htmlFor="registerModal" className="btn modal-button w-24">
-        open modal
+      <main>
+        {/* <label htmlFor="registerModal" className="btn modal-button w-24">
+        open Register
       </label>
-
-      <Signup />
-    </AppLayout>
+      <label htmlFor="loginModal" className="btn modal-button w-24">
+        open login
+  </label>*/}
+      </main>
+    </div>
   );
 };
 

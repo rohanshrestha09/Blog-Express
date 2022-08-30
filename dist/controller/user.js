@@ -8,12 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const storage_1 = require("firebase/storage");
+const moment_1 = __importDefault(require("moment"));
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const User = require("../model/User");
+moment_1.default.suppressDeprecationWarnings = true;
 const storage = (0, storage_1.getStorage)();
 module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { fullname, email, password, confirmPassword, dateOfBirth } = req.body;
@@ -35,7 +40,7 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
             fullname,
             email,
             password: encryptedPassword,
-            dateOfBirth,
+            dateOfBirth: new Date((0, moment_1.default)(dateOfBirth).format()),
         });
         if (req.files) {
             const file = req.files.image;

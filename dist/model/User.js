@@ -22,7 +22,7 @@ const UserSchema = new mongoose_1.Schema({
         required: [true, "Please input password."],
     },
     dateOfBirth: {
-        type: String,
+        type: Date,
         required: [true, "Please provide Date of Birth."],
     },
     image: String,

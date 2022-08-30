@@ -6,10 +6,13 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
+import moment from "moment";
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
 const User = require("../model/User");
+
+moment.suppressDeprecationWarnings = true;
 
 const storage = getStorage();
 
@@ -42,7 +45,7 @@ module.exports.register = asyncHandler(
         fullname,
         email,
         password: encryptedPassword,
-        dateOfBirth,
+        dateOfBirth: new Date(moment(dateOfBirth).format()),
       });
 
       if (req.files) {
