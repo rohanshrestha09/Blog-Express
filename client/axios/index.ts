@@ -1,17 +1,17 @@
-import Axios, { AxiosRequestConfig } from "axios";
+import Axios, { AxiosRequestConfig } from 'axios';
 
 const axios = Axios.create();
 
 axios.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
-    const auth_token = localStorage.getItem("token");
+	(config: AxiosRequestConfig) => {
+		const auth_token = localStorage.getItem('token');
 
-    const { headers } = config as any;
+		const { headers } = config;
 
-    headers["Authorization"] = "Bearer " + auth_token;
-    return config;
-  },
-  (error) => Promise.reject(error)
+		if (headers) headers['Authorization'] = 'Bearer ' + auth_token;
+		return config;
+	},
+	(error) => Promise.reject(error)
 );
 
 export default axios;

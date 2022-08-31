@@ -1,21 +1,21 @@
-import Link from "next/link";
-import { useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Form, Input, Checkbox, Button } from "antd";
-import type { CheckboxChangeEvent } from "antd/es/checkbox";
+import Link from 'next/link';
+import { useRef, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Form, Input, Checkbox, Button } from 'antd';
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import {
   UserOutlined,
   LockOutlined,
   EyeTwoTone,
   EyeInvisibleOutlined,
-} from "@ant-design/icons";
-import { login } from "../api/user";
-import { Login } from "../interface/user";
+} from '@ant-design/icons';
+import { login } from '../api/user';
+import type { ILogin, IToken } from '../interface/user';
 import {
   openSuccessNotification,
   openErrorNotification,
-} from "../utils/openNotification";
-import { AUTH } from "../constants/queryKeys";
+} from '../utils/openNotification';
+import { AUTH } from '../constants/queryKeys';
 
 const Login: React.FC = () => {
   const queryClient = useQueryClient();
@@ -26,90 +26,95 @@ const Login: React.FC = () => {
 
   const [rememberME, setRememberMe] = useState<boolean>(true);
 
-  const handleLogin = useMutation((data: Login) => login(data), {
-    onSuccess: (res: any) => {
+  const handleLogin = useMutation(async (data: ILogin) => login(data), {
+    onSuccess(res: IToken) {
       openSuccessNotification(res.message);
-      rememberME && localStorage.setItem("token", res.token);
+      rememberME && localStorage.setItem('token', res.token);
       form.resetFields();
       loginModalRef.current?.click();
       queryClient.refetchQueries([AUTH]);
     },
-    onError: (err: any) => openErrorNotification(err.response.data.message),
+    onError(err: Error | any) {
+      openErrorNotification(err.response.data.message);
+    },
   });
 
   return (
     <>
-      <input type="checkbox" id="loginModal" className="modal-toggle" />
-      <div className="modal">
-        <div className="modal-box relative scrollbar">
+      <input className='modal-toggle' id='loginModal' type='checkbox' />
+      <div className='modal'>
+        <div className='modal-box relative scrollbar'>
           <label
             ref={loginModalRef}
-            htmlFor="loginModal"
-            className="btn btn-sm btn-circle absolute right-2 top-2"
+            className='btn btn-sm btn-circle absolute right-2 top-2'
+            htmlFor='loginModal'
           >
             ✕
           </label>
 
           <Form
-            className="pt-3"
-            name="normal_login"
-            initialValues={{ remember: true }}
-            layout="vertical"
+            autoComplete='off'
+            className='pt-3'
             form={form}
+            initialValues={{ remember: true }}
+            layout='vertical'
+            name='normal_login'
             requiredMark={false}
-            onFinish={() =>
-              form.validateFields().then((values) => handleLogin.mutate(values))
+            onFinish={async () =>
+              form.validateFields().then((values) => {
+                handleLogin.mutate(values);
+              })
             }
           >
             <Form.Item
-              name="email"
-              label="Email"
-              rules={[{ required: true, message: "Please input your Email!" }]}
+              label='Email'
+              name='email'
+              rules={[{ required: true, message: 'Please input your Email!' }]}
             >
               <Input
-                className="rounded-lg p-2"
-                prefix={<UserOutlined className="text-gray-600 text-lg mr-2" />}
-                placeholder="Email"
-                type="email"
+                className='rounded-lg p-2'
+                placeholder='Email'
+                prefix={<UserOutlined className='text-gray-600 text-lg mr-2' />}
+                type='email'
               />
             </Form.Item>
 
             <Form.Item
-              name="password"
-              label="Password"
+              label='Password'
+              name='password'
               rules={[
-                { required: true, message: "Please input your Password!" },
+                { required: true, message: 'Please input your Password!' },
               ]}
             >
               <Input.Password
-                className="rounded-lg p-2"
-                prefix={<LockOutlined className="text-gray-600 text-lg mr-2" />}
-                type="password"
-                placeholder="Password"
+                className='rounded-lg p-2'
                 iconRender={(visible) =>
                   visible ? (
-                    <EyeTwoTone className="text-gray-600 text-lg" />
+                    <EyeTwoTone className='text-gray-600 text-lg' />
                   ) : (
-                    <EyeInvisibleOutlined className="text-gray-600 text-lg" />
+                    <EyeInvisibleOutlined className='text-gray-600 text-lg' />
                   )
                 }
+                placeholder='Password'
+                prefix={<LockOutlined className='text-gray-600 text-lg mr-2' />}
+                type='password'
               />
             </Form.Item>
 
             <Form.Item>
-              <Form.Item name="remember" noStyle>
+              <Form.Item name='remember' noStyle>
                 <Checkbox
                   checked={rememberME}
-                  onChange={(e: CheckboxChangeEvent) =>
-                    setRememberMe(e.target.checked)
-                  }
+                  onChange={(e: CheckboxChangeEvent) => {
+                    setRememberMe(e.target.checked);
+                  }}
                 >
                   Remember me
                 </Checkbox>
               </Form.Item>
 
-              <Link href="/" passHref={true}>
-                <a className="text-[#0579FD] absolute right-0">
+              <Link href='/' passHref={true}>
+                <a className='text-[#0579FD] absolute right-0'>
                   Forgot password
                 </a>
               </Link>
@@ -117,20 +122,20 @@ const Login: React.FC = () => {
 
             <Form.Item>
               <Button
-                className="w-full h-[3.2rem] rounded-lg text-base btn-primary text-white hover:text-white"
-                htmlType="submit"
+                className='w-full h-[3.2rem] rounded-lg text-base btn-primary text-white hover:text-white'
+                htmlType='submit'
                 loading={handleLogin.isLoading}
               >
                 Login
               </Button>
             </Form.Item>
 
-            <Form.Item className="flex justify-center mb-0">
+            <Form.Item className='flex justify-center mb-0'>
               <span>
-                Don&apos;t have an account?{" "}
+                Don&apos;t have an account?{' '}
                 <label
-                  htmlFor="registerModal"
-                  className="modal-button text-[#0579FD] cursor-pointer"
+                  className='modal-button text-[#0579FD] cursor-pointer'
+                  htmlFor='registerModal'
                   onClick={() => loginModalRef.current?.click()}
                 >
                   Create One

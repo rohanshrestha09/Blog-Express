@@ -1,6 +1,7 @@
-import { createContext } from "react";
-import context from "../interface/context";
+import { createContext } from 'react';
+import type IContext from '../interface/context';
 
-const userContext = createContext<context | null>(null);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const userContext = createContext<IContext | any>(null);
 
 export default userContext;
