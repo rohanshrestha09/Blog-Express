@@ -1,14 +1,15 @@
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
 import {
   uploadBytes,
   ref,
   getDownloadURL,
   getStorage,
   deleteObject,
-} from "firebase/storage";
-const asyncHandler = require("express-async-handler");
-const Blog = require("../model/Blog");
-const User = require("../model/User");
+} from 'firebase/storage';
+import { genre } from '../misc/misc';
+const asyncHandler = require('express-async-handler');
+const Blog = require('../model/Blog');
+const User = require('../model/User');
 
 const storage = getStorage();
 
@@ -18,34 +19,34 @@ module.exports.getAllBlogs = asyncHandler(
 
     try {
       switch (sort) {
-        case "likes":
+        case 'likes':
           return res.status(200).json({
             blogs: await Blog.find({})
               .sort({ likes: -1 })
               .limit(pageSize || 10),
-            message: "Blogs Fetched Successfully",
+            message: 'Blogs Fetched Successfully',
           });
 
-        case "views":
+        case 'views':
           return res.status(200).json({
             blogs: await Blog.find({})
               .sort({ views: -1 })
               .limit(pageSize || 10),
-            message: "Blogs Fetched Successfully",
+            message: 'Blogs Fetched Successfully',
           });
 
-        case "latest":
+        case 'latest':
           return res.status(200).json({
             blogs: await Blog.find({})
               .sort({ createdAt: -1 })
               .limit(pageSize || 10),
-            message: "Blogs Fetched Successfully",
+            message: 'Blogs Fetched Successfully',
           });
 
         default:
           return res.status(200).json({
             blogs: await Blog.find({}).limit(pageSize || 10),
-            message: "Blogs Fetched Successfully",
+            message: 'Blogs Fetched Successfully',
           });
       }
     } catch (err: any) {
@@ -60,34 +61,34 @@ module.exports.getCategorisedBlog = asyncHandler(
 
     try {
       switch (sort) {
-        case "likes":
+        case 'likes':
           return res.status(200).json({
             blogs: await Blog.find({ genre })
               .sort({ likes: -1 })
               .limit(pageSize || 10),
-            message: "Blogs Fetched Successfully",
+            message: 'Blogs Fetched Successfully',
           });
 
-        case "views":
+        case 'views':
           return res.status(200).json({
             blogs: await Blog.find({ genre })
               .sort({ views: -1 })
               .limit(pageSize || 10),
-            message: "Blogs Fetched Successfully",
+            message: 'Blogs Fetched Successfully',
           });
 
-        case "latest":
+        case 'latest':
           return res.status(200).json({
             blogs: await Blog.find({ genre })
               .sort({ createdAt: -1 })
               .limit(pageSize || 10),
-            message: "Blogs Fetched Successfully",
+            message: 'Blogs Fetched Successfully',
           });
 
         default:
           return res.status(200).json({
             blogs: await Blog.find({ genre }).limit(pageSize || 10),
-            message: "Blogs Fetched Successfully",
+            message: 'Blogs Fetched Successfully',
           });
       }
     } catch (err: any) {
@@ -103,10 +104,18 @@ module.exports.getBlog = asyncHandler(
     try {
       return res
         .status(200)
-        .json({ blog, message: "Blog Fetched Successfully" });
+        .json({ blog, message: 'Blog Fetched Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }
+  }
+);
+
+module.exports.getGenre = asyncHandler(
+  async (req: Request, res: Response): Promise<Response> => {
+    return res
+      .status(200)
+      .json({ genre, message: 'Genre Fetched Successfully' });
   }
 );
 
@@ -118,7 +127,7 @@ module.exports.postBlog = asyncHandler(
 
     try {
       if (!req.files)
-        return res.status(403).json({ message: "Image required" });
+        return res.status(403).json({ message: 'Image required' });
 
       const { _id: _blogId } = await Blog.create({
         author: _authorId,
@@ -129,10 +138,10 @@ module.exports.postBlog = asyncHandler(
 
       const file = req.files.image as any;
 
-      if (!file.mimetype.startsWith("image/"))
-        return res.status(403).json({ message: "Please choose an image" });
+      if (!file.mimetype.startsWith('image/'))
+        return res.status(403).json({ message: 'Please choose an image' });
 
-      const filename = file.mimetype.replace("image/", `${_blogId}.`);
+      const filename = file.mimetype.replace('image/', `${_blogId}.`);
 
       const storageRef = ref(storage, `blogs/${filename}`);
 
@@ -151,7 +160,7 @@ module.exports.postBlog = asyncHandler(
 
       await User.findByIdAndUpdate(_authorId, { $push: { blogs: _blogId } });
 
-      return res.status(200).json({ message: "Blog Posted Successfully" });
+      return res.status(200).json({ message: 'Blog Posted Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }
@@ -166,16 +175,16 @@ module.exports.updateBlog = asyncHandler(
 
     try {
       if (!req.files)
-        return res.status(403).json({ message: "Image required" });
+        return res.status(403).json({ message: 'Image required' });
 
       const file = req.files.image as any;
 
-      if (!file.mimetype.startsWith("image/"))
-        return res.status(403).json({ message: "Please choose an image" });
+      if (!file.mimetype.startsWith('image/'))
+        return res.status(403).json({ message: 'Please choose an image' });
 
       if (image) deleteObject(ref(storage, `blogs/${imageName}`));
 
-      const filename = file.mimetype.replace("image/", `${_blogId}.`);
+      const filename = file.mimetype.replace('image/', `${_blogId}.`);
 
       const storageRef = ref(storage, `blogs/${filename}`);
 
@@ -195,7 +204,7 @@ module.exports.updateBlog = asyncHandler(
         genre,
       });
 
-      return res.status(200).json({ message: "Blog Updated Successfully" });
+      return res.status(200).json({ message: 'Blog Updated Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }
@@ -215,7 +224,7 @@ module.exports.deleteBlog = asyncHandler(
 
       await User.findByIdAndUpdate(_authorId, { $pull: { blogs: _blogId } });
 
-      return res.status(200).json({ message: "Blog Deleted Successfully" });
+      return res.status(200).json({ message: 'Blog Deleted Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }
@@ -229,7 +238,7 @@ module.exports.publishBlog = asyncHandler(
     try {
       await Blog.findByIdAndUpdate(_blogId, { isPublished: true });
 
-      return res.status(200).json({ message: "Blog Published Successfully" });
+      return res.status(200).json({ message: 'Blog Published Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }
@@ -243,7 +252,7 @@ module.exports.unpublishBlog = asyncHandler(
     try {
       await Blog.findByIdAndUpdate(_blogId, { isPublished: false });
 
-      return res.status(200).json({ message: "Blog Unpubished Successfully" });
+      return res.status(200).json({ message: 'Blog Unpubished Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }

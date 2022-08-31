@@ -1,37 +1,40 @@
-import express, { Router } from "express";
+import express, { Router } from 'express';
 const {
   getAllBlogs,
   getCategorisedBlog,
   getBlog,
+  getGenre,
   postBlog,
   updateBlog,
   deleteBlog,
   publishBlog,
   unpublishBlog,
-} = require("../controller/blog");
+} = require('../controller/blog');
 
-const auth = require("../middleware/auth");
+const auth = require('../middleware/auth');
 
-const blogValidator = require("../middleware/blogValidator");
+const blogValidator = require('../middleware/blogValidator');
 
 const router: Router = express.Router();
 
-router.get("/blog", getAllBlogs);
+router.get('/blog', getAllBlogs);
 
-router.get("/blog/categorised", getCategorisedBlog);
+router.get('/blog/categorised', getCategorisedBlog);
 
-router.use(["/blog/:_blogId", "/blog/:_blogId/publish"], auth, blogValidator);
+router.get('/blog/getGenre', getGenre);
 
-router.post("/blog", auth, postBlog);
+router.use(['/blog/:_blogId', '/blog/:_blogId/publish'], auth, blogValidator);
 
-router.get("/blog/:_blogId", getBlog);
+router.post('/blog', auth, postBlog);
 
-router.put("/blog/:_blogId", updateBlog);
+router.get('/blog/:_blogId', getBlog);
 
-router.delete("/blog/:_blogId", deleteBlog);
+router.put('/blog/:_blogId', updateBlog);
 
-router.post("/blog/:_blogId/publish", publishBlog);
+router.delete('/blog/:_blogId', deleteBlog);
 
-router.delete("/blog/:_blogId/publish", unpublishBlog);
+router.post('/blog/:_blogId/publish', publishBlog);
+
+router.delete('/blog/:_blogId/publish', unpublishBlog);
 
 module.exports = router;
