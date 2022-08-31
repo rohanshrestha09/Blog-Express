@@ -123,7 +123,7 @@ module.exports.postBlog = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     const { _id: _authorId } = res.locals.user;
 
-    const { title, content, genre } = req.body;
+    const { title, content, genre, isPublished } = req.body;
 
     try {
       if (!req.files)
@@ -134,6 +134,7 @@ module.exports.postBlog = asyncHandler(
         title,
         content,
         genre,
+        isPublished,
       });
 
       const file = req.files.image as any;

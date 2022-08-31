@@ -1,28 +1,26 @@
-import type { NextPage } from 'next';
+import type { GetServerSideProps, NextPage } from 'next';
 import Head from 'next/head';
 import { useRef, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Editor } from '@tinymce/tinymce-react';
 import {
-  Form,
-  Input,
-  Button,
-  Upload,
-  Select,
-  Dropdown,
-  Menu,
-  message,
-} from 'antd';
+  dehydrate,
+  DehydratedState,
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { Editor } from '@tinymce/tinymce-react';
+import { Form, Input, Button, Upload, Select, Dropdown, Menu, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { IPostBlog } from '../interface/blog';
-import { postBlog } from '../api/blog';
-import {
-  openErrorNotification,
-  openSuccessNotification,
-} from '../utils/openNotification';
+import { getGenre, postBlog } from '../api/blog';
+import { openErrorNotification, openSuccessNotification } from '../utils/openNotification';
 import IMessage from '../interface/message';
+import { AUTH, GET_GENRE } from '../constants/queryKeys';
 
 const Create: NextPage = () => {
+  const queryClient = useQueryClient();
+
   const editorRef = useRef<any>();
 
   const [form] = Form.useForm();
@@ -30,6 +28,13 @@ const Create: NextPage = () => {
   const { Option } = Select;
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
+  const [renderEditor, setRenderEditor] = useState<number>(1);
+
+  const { data: genre, isSuccess: isGenreSuccess } = useQuery({
+    queryFn: () => getGenre(),
+    queryKey: [GET_GENRE],
+  });
 
   const fileUploadOptions = {
     maxCount: 1,
@@ -70,13 +75,16 @@ const Create: NextPage = () => {
       onSuccess: (res: IMessage) => {
         openSuccessNotification(res.message);
         form.resetFields();
+        setSelectedImage(null);
+        setRenderEditor(Math.random() * 100);
+        queryClient.refetchQueries([AUTH]);
       },
       onError: (err: any) => openErrorNotification(err.response.data.message),
     }
   );
 
   return (
-    <div className='w-full flex flex-col items-center p-5'>
+    <div className='w-full flex flex-col items-center p-5 pb-0'>
       <Head>
         <title>Create a post</title>
         <link href='/favicon.ico' rel='icon' />
@@ -97,17 +105,15 @@ const Create: NextPage = () => {
             name='title'
             rules={[{ required: true, message: 'Please input title' }]}
           >
-            <Input
-              className='rounded-lg px-4 py-2.5 placeholder:text-base'
-              placeholder='Title'
-            />
+            <Input className='rounded-lg px-4 py-2.5 placeholder:text-base' placeholder='Title' />
           </Form.Item>
 
           <Form.Item className='col-span-full'>
             <Editor
+              key={renderEditor}
               apiKey='bzuei2kyl5e5z8ryogjw5qq9ue6wfqj2qarzvlto5orm8pfd'
               init={{
-                height: 415,
+                height: 400,
                 menubar: true,
                 plugins: [
                   'advlist',
@@ -134,8 +140,7 @@ const Create: NextPage = () => {
                   'bold italic forecolor | alignleft aligncenter ' +
                   'alignright alignjustify | bullist numlist outdent indent | ' +
                   'removeformat | help',
-                content_style:
-                  'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
               }}
               initialValue='<p>This is the initial content of the editor.</p>'
               onInit={(evt, editor) => (editorRef.current = editor)}
@@ -179,12 +184,12 @@ const Create: NextPage = () => {
               size='large'
               allowClear
             >
-              <Option value='brand'>Brand</Option>
-              <Option value='category'>Category</Option>
-              <Option value='product_goup'>Product Group</Option>
-              <Option value='brand'>Brand</Option>
-              <Option value='categry'>Category</Option>
-              <Option value='product_group'>Product Group</Option>
+              {isGenreSuccess &&
+                genre.map((el) => (
+                  <Option key={el} value={el}>
+                    {el}
+                  </Option>
+                ))}
             </Select>
           </Form.Item>
 
@@ -197,8 +202,7 @@ const Create: NextPage = () => {
                   handlePostBlog.mutate({
                     ...values,
                     isPublished: true,
-                    content:
-                      editorRef.current && editorRef.current.getContent(),
+                    content: editorRef.current && editorRef.current.getContent(),
                   })
                 )
               }
@@ -220,9 +224,7 @@ const Create: NextPage = () => {
                             form.validateFields().then((values) =>
                               handlePostBlog.mutate({
                                 ...values,
-                                content:
-                                  editorRef.current &&
-                                  editorRef.current.getContent(),
+                                content: editorRef.current && editorRef.current.getContent(),
                               })
                             )
                           }
@@ -246,3 +248,20 @@ const Create: NextPage = () => {
 };
 
 export default Create;
+
+export const getServerSideProps: GetServerSideProps = async (): Promise<{
+  props: { dehyrdatedState: DehydratedState };
+}> => {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery({
+    queryFn: () => getGenre(),
+    queryKey: [GET_GENRE],
+  });
+
+  return {
+    props: {
+      dehyrdatedState: dehydrate(queryClient),
+    },
+  };
+};

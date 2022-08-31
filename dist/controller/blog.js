@@ -105,7 +105,7 @@ module.exports.getGenre = asyncHandler((req, res) => __awaiter(void 0, void 0, v
 }));
 module.exports.postBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id: _authorId } = res.locals.user;
-    const { title, content, genre } = req.body;
+    const { title, content, genre, isPublished } = req.body;
     try {
         if (!req.files)
             return res.status(403).json({ message: 'Image required' });
@@ -114,6 +114,7 @@ module.exports.postBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, v
             title,
             content,
             genre,
+            isPublished,
         });
         const file = req.files.image;
         if (!file.mimetype.startsWith('image/'))

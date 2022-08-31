@@ -3,18 +3,10 @@ import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Checkbox, Button } from 'antd';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
-import {
-  UserOutlined,
-  LockOutlined,
-  EyeTwoTone,
-  EyeInvisibleOutlined,
-} from '@ant-design/icons';
+import { UserOutlined, LockOutlined, EyeTwoTone, EyeInvisibleOutlined } from '@ant-design/icons';
 import { login } from '../api/user';
 import type { ILogin, IToken } from '../interface/user';
-import {
-  openSuccessNotification,
-  openErrorNotification,
-} from '../utils/openNotification';
+import { openSuccessNotification, openErrorNotification } from '../utils/openNotification';
 import { AUTH } from '../constants/queryKeys';
 
 const Login: React.FC = () => {
@@ -82,9 +74,7 @@ const Login: React.FC = () => {
             <Form.Item
               label='Password'
               name='password'
-              rules={[
-                { required: true, message: 'Please input your Password!' },
-              ]}
+              rules={[{ required: true, message: 'Please input your Password!' }]}
             >
               <Input.Password
                 className='rounded-lg p-2'
@@ -114,9 +104,7 @@ const Login: React.FC = () => {
               </Form.Item>
 
               <Link href='/' passHref={true}>
-                <a className='text-[#0579FD] absolute right-0'>
-                  Forgot password
-                </a>
+                <a className='text-[#0579FD] absolute right-0'>Forgot password</a>
               </Link>
             </Form.Item>
 

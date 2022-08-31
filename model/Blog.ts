@@ -1,31 +1,31 @@
-import { Schema, model } from "mongoose";
-import { genre } from "../misc/misc";
+import { Schema, model } from 'mongoose';
+import { genre } from '../misc/misc';
 
 const BlogSchema = new Schema(
   {
-    author: { type: Schema.Types.ObjectId, required: [true, "Author missing"] },
+    author: { type: Schema.Types.ObjectId, required: [true, 'Author missing'] },
     image: String,
     imageName: String,
     title: {
       type: String,
-      required: [true, "Title missing"],
+      required: [true, 'Title missing'],
     },
     content: {
       type: String,
-      required: [true, "Content missing"],
-      minLength: [20, "Content must contain atleast 20 characters"],
+      required: [true, 'Content missing'],
     },
     genre: {
       type: [String],
+      required: [true, 'Atleast one genre required'],
       validate: [
         function arrayLimit(val: any) {
           return val.length <= 5;
         },
-        "Only 5 genre allowed",
+        'Only 5 genre allowed',
       ],
       enum: {
         values: genre as Array<String>,
-        message: "{VALUE} not supported",
+        message: '{VALUE} not supported',
       },
     },
     likers: [Schema.Types.ObjectId],
@@ -38,4 +38,4 @@ const BlogSchema = new Schema(
   { timestamps: true }
 );
 
-module.exports = model("Blog", BlogSchema);
+module.exports = model('Blog', BlogSchema);

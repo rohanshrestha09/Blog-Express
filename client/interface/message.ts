@@ -1,5 +1,5 @@
 interface IMessage {
-	message: string;
+  message: string;
 }
 
 export default IMessage;

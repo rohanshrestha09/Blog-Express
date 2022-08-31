@@ -1,11 +1,7 @@
 import { NextRouter, useRouter } from 'next/router';
 import { useContext, useState } from 'react';
 import { AiOutlineHome, AiOutlineLogout } from 'react-icons/ai';
-import {
-  BiMessageSquareEdit,
-  BiUserCircle,
-  BiNotification,
-} from 'react-icons/bi';
+import { BiMessageSquareEdit, BiUserCircle, BiNotification } from 'react-icons/bi';
 import IContext from '../interface/context';
 import userContext from '../utils/userContext';
 
@@ -52,9 +48,7 @@ const Nav: React.FC = () => {
           >
             {el}
             <span
-              className={`absolute right-0 opacity-0 ${
-                el.key === 'notification' && 'text-xs'
-              }`}
+              className={`absolute right-0 opacity-0 ${el.key === 'notification' && 'text-xs'}`}
             >
               {el.key}
             </span>
@@ -62,9 +56,7 @@ const Nav: React.FC = () => {
         ))}
       </div>
 
-      <label
-        className={`${toggleNav && 'mt-4'} btn btn-circle swap swap-rotate`}
-      >
+      <label className={`${toggleNav && 'mt-4'} btn btn-circle swap swap-rotate`}>
         <input type='checkbox' onClick={() => setToggleNav((prev) => !prev)} />
         <svg
           className='swap-off fill-current'
