@@ -12,7 +12,7 @@ import {
 import { Editor } from '@tinymce/tinymce-react';
 import { Form, Input, Button, Upload, Select, Dropdown, Menu, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import { IPostBlog } from '../interface/blog';
+import { IGetGenre, IPostBlog } from '../interface/blog';
 import { getGenre, postBlog } from '../api/blog';
 import { openErrorNotification, openSuccessNotification } from '../utils/openNotification';
 import IMessage from '../interface/message';
@@ -31,7 +31,7 @@ const Create: NextPage = () => {
 
   const [renderEditor, setRenderEditor] = useState<number>(1);
 
-  const { data: genre, isSuccess: isGenreSuccess } = useQuery({
+  const { data: genre, isSuccess: isGenreSuccess } = useQuery<IGetGenre['genre']>({
     queryFn: () => getGenre(),
     queryKey: [GET_GENRE],
   });

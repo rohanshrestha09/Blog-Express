@@ -1,113 +1,96 @@
-import { Request, Response } from "express";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
-} from "firebase/storage";
-import moment from "moment";
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const asyncHandler = require("express-async-handler");
-const User = require("../model/User");
+import { Request, Response } from 'express';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import moment from 'moment';
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const asyncHandler = require('express-async-handler');
+const User = require('../model/User');
 
 moment.suppressDeprecationWarnings = true;
 
 const storage = getStorage();
 
-module.exports.register = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { fullname, email, password, confirmPassword, dateOfBirth } =
-      req.body;
+module.exports.register = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { fullname, email, password, confirmPassword, dateOfBirth } = req.body;
 
-    try {
-      const userExists = await User.findOne({ email });
+  try {
+    const userExists = await User.findOne({ email });
 
-      if (userExists)
-        return res
-          .status(403)
-          .json({ message: "User already exists. Choose a different email." });
+    if (userExists)
+      return res.status(403).json({ message: 'User already exists. Choose a different email.' });
 
-      if (!password || password < 8)
-        return res
-          .status(403)
-          .json({ message: "Password must contain atleast 8 characters." });
+    if (!password || password < 8)
+      return res.status(403).json({ message: 'Password must contain atleast 8 characters.' });
 
-      if (password !== confirmPassword)
-        return res.status(403).json({ message: "Password does not match." });
+    if (password !== confirmPassword)
+      return res.status(403).json({ message: 'Password does not match.' });
 
-      const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(10);
 
-      const encryptedPassword: string = await bcrypt.hash(password, salt);
+    const encryptedPassword: string = await bcrypt.hash(password, salt);
 
-      const { _id: _userId } = await User.create({
-        fullname,
-        email,
-        password: encryptedPassword,
-        dateOfBirth: new Date(moment(dateOfBirth).format()),
+    const { _id: _userId } = await User.create({
+      fullname,
+      email,
+      password: encryptedPassword,
+      dateOfBirth: new Date(moment(dateOfBirth).format()),
+    });
+
+    if (req.files) {
+      const file = req.files.image as any;
+
+      if (!file.mimetype.startsWith('image/'))
+        return res.status(403).json({ message: 'Please choose an image' });
+
+      const filename = file.mimetype.replace('image/', `${_userId}.`);
+
+      const storageRef = ref(storage, `users/${filename}`);
+
+      const metadata = {
+        contentType: file.mimetype,
+      };
+
+      await uploadBytes(storageRef, file.data, metadata);
+
+      const url = await getDownloadURL(storageRef);
+
+      await User.findByIdAndUpdate(_userId, {
+        image: url,
+        imageName: filename,
       });
-
-      if (req.files) {
-        const file = req.files.image as any;
-
-        if (!file.mimetype.startsWith("image/"))
-          return res.status(403).json({ message: "Please choose an image" });
-
-        const filename = file.mimetype.replace("image/", `${_userId}.`);
-
-        const storageRef = ref(storage, `users/${filename}`);
-
-        const metadata = {
-          contentType: file.mimetype,
-        };
-
-        await uploadBytes(storageRef, file.data, metadata);
-
-        const url = await getDownloadURL(storageRef);
-
-        await User.findByIdAndUpdate(_userId, {
-          image: url,
-          imageName: filename,
-        });
-      }
-
-      const token: string = jwt.sign({ _id: _userId }, process.env.JWT_TOKEN, {
-        expiresIn: "20d",
-      });
-
-      return res.status(200).json({ token, message: "Signup Successful" });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
     }
+
+    const token: string = jwt.sign({ _id: _userId }, process.env.JWT_TOKEN, {
+      expiresIn: '20d',
+    });
+
+    return res.status(200).json({ token, message: 'Signup Successful' });
+  } catch (err: any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.login = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { email, password } = req.body;
+module.exports.login = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { email, password } = req.body;
 
-    try {
-      const user = await User.findOne({ email }).select("+password");
+  try {
+    const user = await User.findOne({ email }).select('+password');
 
-      if (!user)
-        return res.status(404).json({ message: "User does not exist." });
+    if (!user) return res.status(404).json({ message: 'User does not exist.' });
 
-      const isMatched: boolean = await bcrypt.compare(password, user.password);
+    const isMatched: boolean = await bcrypt.compare(password, user.password);
 
-      if (!isMatched)
-        return res.status(403).json({ message: "Incorrect Password" });
+    if (!isMatched) return res.status(403).json({ message: 'Incorrect Password' });
 
-      const token: string = jwt.sign({ _id: user._id }, process.env.JWT_TOKEN, {
-        expiresIn: "20d",
-      });
+    const token: string = jwt.sign({ _id: user._id }, process.env.JWT_TOKEN, {
+      expiresIn: '20d',
+    });
 
-      return res.status(200).json({ token, message: "Login Successful" });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+    return res.status(200).json({ token, message: 'Login Successful' });
+  } catch (err: any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
 module.exports.authSuccess = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
@@ -115,18 +98,16 @@ module.exports.authSuccess = asyncHandler(
   }
 );
 
-module.exports.getProfile = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    try {
-      return res.status(200).json({
-        user: res.locals.queryUser,
-        message: "User Fetched Successfully",
-      });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+module.exports.getProfile = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  try {
+    return res.status(200).json({
+      user: res.locals.queryUser,
+      message: 'User Fetched Successfully',
+    });
+  } catch (err: any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
 module.exports.updateProfile = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
@@ -138,12 +119,12 @@ module.exports.updateProfile = asyncHandler(
       if (req.files) {
         const file = req.files.image as any;
 
-        if (!file.mimetype.startsWith("image/"))
-          return res.status(403).json({ message: "Please choose an image" });
+        if (!file.mimetype.startsWith('image/'))
+          return res.status(403).json({ message: 'Please choose an image' });
 
         if (image) deleteObject(ref(storage, `users/${imageName}`));
 
-        const filename = file.mimetype.replace("image/", `${_userId}.`);
+        const filename = file.mimetype.replace('image/', `${_userId}.`);
 
         const storageRef = ref(storage, `users/${filename}`);
 
@@ -167,7 +148,7 @@ module.exports.updateProfile = asyncHandler(
         dateOfBirth,
       });
 
-      return res.status(200).json({ message: "Profile Updated Successfully" });
+      return res.status(200).json({ message: 'Profile Updated Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }
@@ -183,7 +164,7 @@ module.exports.deleteProfile = asyncHandler(
 
       await User.findByIdAndDelete(_userId);
 
-      return res.status(200).json({ message: "Profile Deleted Successfully" });
+      return res.status(200).json({ message: 'Profile Deleted Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }
@@ -198,13 +179,11 @@ module.exports.deleteProfileImage = asyncHandler(
       if (image) deleteObject(ref(storage, `users/${imageName}`));
 
       await User.findByIdAndUpdate(_userId, {
-        image: "",
-        imageName: "",
+        image: '',
+        imageName: '',
       });
 
-      return res
-        .status(200)
-        .json({ message: "Profile Image Removed Successfully" });
+      return res.status(200).json({ message: 'Profile Image Removed Successfully' });
     } catch (err: any) {
       return res.status(404).json({ message: err.message });
     }

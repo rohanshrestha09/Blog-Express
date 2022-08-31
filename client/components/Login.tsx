@@ -16,12 +16,12 @@ const Login: React.FC = () => {
 
   const [form] = Form.useForm();
 
-  const [rememberME, setRememberMe] = useState<boolean>(true);
+  const [rememberMe, setRememberMe] = useState<boolean>(true);
 
   const handleLogin = useMutation(async (data: ILogin) => login(data), {
     onSuccess(res: IToken) {
       openSuccessNotification(res.message);
-      rememberME && localStorage.setItem('token', res.token);
+      rememberMe && localStorage.setItem('token', res.token);
       form.resetFields();
       loginModalRef.current?.click();
       queryClient.refetchQueries([AUTH]);
@@ -94,7 +94,7 @@ const Login: React.FC = () => {
             <Form.Item>
               <Form.Item name='remember' noStyle>
                 <Checkbox
-                  checked={rememberME}
+                  checked={rememberMe}
                   onChange={(e: CheckboxChangeEvent) => {
                     setRememberMe(e.target.checked);
                   }}

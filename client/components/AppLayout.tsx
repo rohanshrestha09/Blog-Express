@@ -2,7 +2,6 @@ import { Layout } from 'antd';
 import Login from './Login';
 import Nav from './Nav';
 import NavBar from './NavBar';
-import NavMenu from './NavMenu';
 import Register from './Register';
 
 /* eslint-disable react/prop-types */

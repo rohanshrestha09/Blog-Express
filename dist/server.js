@@ -7,10 +7,10 @@ const express_1 = __importDefault(require("express"));
 const db_1 = __importDefault(require("./db"));
 const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const app_1 = require("firebase/app");
-const rateLimit = require("express-rate-limit");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-require("dotenv").config({ path: __dirname + "/.env" });
+const rateLimit = require('express-rate-limit');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+require('dotenv').config({ path: __dirname + '/.env' });
 const app = (0, express_1.default)();
 app.use(express_1.default.urlencoded({ extended: false }));
 app.use(cors());
@@ -20,9 +20,9 @@ app.use((0, express_fileupload_1.default)());
 const PORT = process.env.PORT;
 const firebaseConfig = {
     apiKey: process.env.API_KEY,
-    authDomain: "blog-sansar.firebaseapp.com",
-    projectId: "blog-sansar",
-    storageBucket: "blog-sansar.appspot.com",
+    authDomain: 'blog-sansar.firebaseapp.com',
+    projectId: 'blog-sansar',
+    storageBucket: 'blog-sansar.appspot.com',
     messagingSenderId: process.env.MESSAGING_SENDER_ID,
     appId: process.env.APP_ID,
     measurementId: process.env.MEASUREMENT_ID,
@@ -36,8 +36,8 @@ const limiter = rateLimit({
     legacyHeaders: false,
 });
 app.use(limiter);
-app.use("/api", require("./routes/user"));
-app.use("/api", require("./routes/security"));
-app.use("/api", require("./routes/blog"));
-app.use("/api", require("./routes/userActivity"));
+app.use('/api', require('./routes/user'));
+app.use('/api', require('./routes/security'));
+app.use('/api', require('./routes/blog'));
+app.use('/api', require('./routes/userActivity'));
 app.listen(PORT);

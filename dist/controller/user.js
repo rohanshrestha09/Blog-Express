@@ -14,10 +14,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const storage_1 = require("firebase/storage");
 const moment_1 = __importDefault(require("moment"));
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const asyncHandler = require("express-async-handler");
-const User = require("../model/User");
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const asyncHandler = require('express-async-handler');
+const User = require('../model/User');
 moment_1.default.suppressDeprecationWarnings = true;
 const storage = (0, storage_1.getStorage)();
 module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -25,15 +25,11 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
     try {
         const userExists = yield User.findOne({ email });
         if (userExists)
-            return res
-                .status(403)
-                .json({ message: "User already exists. Choose a different email." });
+            return res.status(403).json({ message: 'User already exists. Choose a different email.' });
         if (!password || password < 8)
-            return res
-                .status(403)
-                .json({ message: "Password must contain atleast 8 characters." });
+            return res.status(403).json({ message: 'Password must contain atleast 8 characters.' });
         if (password !== confirmPassword)
-            return res.status(403).json({ message: "Password does not match." });
+            return res.status(403).json({ message: 'Password does not match.' });
         const salt = yield bcrypt.genSalt(10);
         const encryptedPassword = yield bcrypt.hash(password, salt);
         const { _id: _userId } = yield User.create({
@@ -44,9 +40,9 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
         });
         if (req.files) {
             const file = req.files.image;
-            if (!file.mimetype.startsWith("image/"))
-                return res.status(403).json({ message: "Please choose an image" });
-            const filename = file.mimetype.replace("image/", `${_userId}.`);
+            if (!file.mimetype.startsWith('image/'))
+                return res.status(403).json({ message: 'Please choose an image' });
+            const filename = file.mimetype.replace('image/', `${_userId}.`);
             const storageRef = (0, storage_1.ref)(storage, `users/${filename}`);
             const metadata = {
                 contentType: file.mimetype,
@@ -59,9 +55,9 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
             });
         }
         const token = jwt.sign({ _id: _userId }, process.env.JWT_TOKEN, {
-            expiresIn: "20d",
+            expiresIn: '20d',
         });
-        return res.status(200).json({ token, message: "Signup Successful" });
+        return res.status(200).json({ token, message: 'Signup Successful' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
@@ -70,16 +66,16 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
 module.exports.login = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
-        const user = yield User.findOne({ email }).select("+password");
+        const user = yield User.findOne({ email }).select('+password');
         if (!user)
-            return res.status(404).json({ message: "User does not exist." });
+            return res.status(404).json({ message: 'User does not exist.' });
         const isMatched = yield bcrypt.compare(password, user.password);
         if (!isMatched)
-            return res.status(403).json({ message: "Incorrect Password" });
+            return res.status(403).json({ message: 'Incorrect Password' });
         const token = jwt.sign({ _id: user._id }, process.env.JWT_TOKEN, {
-            expiresIn: "20d",
+            expiresIn: '20d',
         });
-        return res.status(200).json({ token, message: "Login Successful" });
+        return res.status(200).json({ token, message: 'Login Successful' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
@@ -92,7 +88,7 @@ module.exports.getProfile = asyncHandler((req, res) => __awaiter(void 0, void 0,
     try {
         return res.status(200).json({
             user: res.locals.queryUser,
-            message: "User Fetched Successfully",
+            message: 'User Fetched Successfully',
         });
     }
     catch (err) {
@@ -105,11 +101,11 @@ module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void
     try {
         if (req.files) {
             const file = req.files.image;
-            if (!file.mimetype.startsWith("image/"))
-                return res.status(403).json({ message: "Please choose an image" });
+            if (!file.mimetype.startsWith('image/'))
+                return res.status(403).json({ message: 'Please choose an image' });
             if (image)
                 (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `users/${imageName}`));
-            const filename = file.mimetype.replace("image/", `${_userId}.`);
+            const filename = file.mimetype.replace('image/', `${_userId}.`);
             const storageRef = (0, storage_1.ref)(storage, `users/${filename}`);
             const metadata = {
                 contentType: file.mimetype,
@@ -126,7 +122,7 @@ module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void
             bio,
             dateOfBirth,
         });
-        return res.status(200).json({ message: "Profile Updated Successfully" });
+        return res.status(200).json({ message: 'Profile Updated Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
@@ -138,7 +134,7 @@ module.exports.deleteProfile = asyncHandler((req, res) => __awaiter(void 0, void
         if (image)
             (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `users/${imageName}`));
         yield User.findByIdAndDelete(_userId);
-        return res.status(200).json({ message: "Profile Deleted Successfully" });
+        return res.status(200).json({ message: 'Profile Deleted Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
@@ -150,12 +146,10 @@ module.exports.deleteProfileImage = asyncHandler((req, res) => __awaiter(void 0,
         if (image)
             (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `users/${imageName}`));
         yield User.findByIdAndUpdate(_userId, {
-            image: "",
-            imageName: "",
+            image: '',
+            imageName: '',
         });
-        return res
-            .status(200)
-            .json({ message: "Profile Image Removed Successfully" });
+        return res.status(200).json({ message: 'Profile Image Removed Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
