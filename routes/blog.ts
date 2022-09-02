@@ -21,7 +21,7 @@ router.get('/blog', getAllBlogs);
 
 router.get('/blog/categorised', getCategorisedBlog);
 
-router.get('/blog/:_blogId', getBlog);
+router.get('/blog/:_blogId', blogValidator, getBlog);
 
 router.get('/blog/genre', getGenre);
 
