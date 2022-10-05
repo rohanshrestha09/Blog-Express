@@ -7,11 +7,10 @@ const Blog = require('../model/Blog');
 
 module.exports = asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    let token;
-
     const { authorization } = req.headers;
 
-    if (authorization && authorization.startsWith('Bearer')) token = authorization.split(' ')[1];
+    const [_, token] =
+      authorization && authorization.startsWith('Bearer') ? authorization.split(' ') : [];
 
     if (!token) return res.status(401).json({ message: 'Not authorised' });
 
