@@ -8,109 +8,56 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const storage_1 = require("firebase/storage");
-const misc_1 = require("../misc/misc");
+exports.uncomment = exports.comment = exports.unbookmark = exports.bookmark = exports.unlike = exports.like = exports.unpublish = exports.publish = exports.genre = exports.deleteBlog = exports.updateBlog = exports.postBlog = exports.blog = exports.blogs = void 0;
+const uploadFile_1 = __importDefault(require("../middleware/uploadFile"));
+const deleteFile_1 = __importDefault(require("../middleware/deleteFile"));
+const Blog_1 = __importDefault(require("../model/Blog"));
+const User_1 = __importDefault(require("../model/User"));
+const misc_1 = require("../misc");
 const asyncHandler = require('express-async-handler');
-const Blog = require('../model/Blog');
-const User = require('../model/User');
-const storage = (0, storage_1.getStorage)();
-module.exports.getAllBlogs = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { sort, pageSize } = req.query;
+exports.blogs = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { sort, pageSize, genre } = req.query;
+    let query = { isPublished: true };
+    if (genre)
+        query = Object.assign({
+            genre: {
+                $in: Array.isArray(genre) ? genre : typeof genre === 'string' && genre.split(','),
+            },
+        }, query);
     try {
-        switch (sort) {
-            case 'likes':
-                return res.status(200).json({
-                    blogs: yield Blog.find({})
-                        .sort({ likes: -1 })
-                        .limit(pageSize || 10),
-                    message: 'Blogs Fetched Successfully',
-                });
-            case 'views':
-                return res.status(200).json({
-                    blogs: yield Blog.find({})
-                        .sort({ views: -1 })
-                        .limit(pageSize || 10),
-                    message: 'Blogs Fetched Successfully',
-                });
-            case 'latest':
-                return res.status(200).json({
-                    blogs: yield Blog.find({})
-                        .sort({ createdAt: -1 })
-                        .limit(pageSize || 10),
-                    message: 'Blogs Fetched Successfully',
-                });
-            default:
-                return res.status(200).json({
-                    blogs: yield Blog.find({}).limit(pageSize || 10),
-                    message: 'Blogs Fetched Successfully',
-                });
-        }
+        return res.status(200).json({
+            data: yield Blog_1.default.find(query)
+                .sort({ [(typeof sort === 'string' && sort) || 'likes']: -1 })
+                .limit(Number(pageSize || 20))
+                .populate('author', '-password'),
+            count: yield Blog_1.default.countDocuments(query),
+            message: 'Blogs Fetched Successfully',
+        });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.getCategorisedBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { genre, sort, pageSize } = req.query;
+exports.blog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        switch (sort) {
-            case 'likes':
-                return res.status(200).json({
-                    blogs: yield Blog.find({ genre })
-                        .sort({ likes: -1 })
-                        .limit(pageSize || 10),
-                    message: 'Blogs Fetched Successfully',
-                });
-            case 'views':
-                return res.status(200).json({
-                    blogs: yield Blog.find({ genre })
-                        .sort({ views: -1 })
-                        .limit(pageSize || 10),
-                    message: 'Blogs Fetched Successfully',
-                });
-            case 'latest':
-                return res.status(200).json({
-                    blogs: yield Blog.find({ genre })
-                        .sort({ createdAt: -1 })
-                        .limit(pageSize || 10),
-                    message: 'Blogs Fetched Successfully',
-                });
-            default:
-                return res.status(200).json({
-                    blogs: yield Blog.find({ genre }).limit(pageSize || 10),
-                    message: 'Blogs Fetched Successfully',
-                });
-        }
+        return res.status(200).json({ blog: res.locals.blog, message: 'Blog Fetched Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.getBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const blog = res.locals.blog;
-    try {
-        return res
-            .status(200)
-            .json({ blog, message: 'Blog Fetched Successfully' });
-    }
-    catch (err) {
-        return res.status(404).json({ message: err.message });
-    }
-}));
-module.exports.getGenre = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    return res
-        .status(200)
-        .json({ genre: misc_1.genre, message: 'Genre Fetched Successfully' });
-}));
-module.exports.postBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id: _authorId } = res.locals.user;
+exports.postBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: authId } = res.locals.auth;
     const { title, content, genre, isPublished } = req.body;
     try {
         if (!req.files)
             return res.status(403).json({ message: 'Image required' });
-        const { _id: _blogId } = yield Blog.create({
-            author: _authorId,
+        const { _id: blogId } = yield Blog_1.default.create({
+            author: authId,
             title,
             content,
             genre,
@@ -119,45 +66,37 @@ module.exports.postBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, v
         const file = req.files.image;
         if (!file.mimetype.startsWith('image/'))
             return res.status(403).json({ message: 'Please choose an image' });
-        const filename = file.mimetype.replace('image/', `${_blogId}.`);
-        const storageRef = (0, storage_1.ref)(storage, `blogs/${filename}`);
-        const metadata = {
-            contentType: file.mimetype,
-        };
-        yield (0, storage_1.uploadBytes)(storageRef, file.data, metadata);
-        const url = yield (0, storage_1.getDownloadURL)(storageRef);
-        yield Blog.findByIdAndUpdate(_blogId, {
-            image: url,
+        const filename = file.mimetype.replace('image/', `${blogId}.`);
+        const fileUrl = yield (0, uploadFile_1.default)(file.data, file.mimetype, `blogs/${filename}`);
+        yield Blog_1.default.findByIdAndUpdate(blogId, {
+            image: fileUrl,
             imageName: filename,
         });
-        yield User.findByIdAndUpdate(_authorId, { $push: { blogs: _blogId } });
+        yield User_1.default.findByIdAndUpdate(authId, { $push: { blogs: blogId } });
         return res.status(200).json({ message: 'Blog Posted Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.updateBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id: _blogId, image, imageName } = res.locals.blog;
+exports.updateBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: blogId, image, imageName } = res.locals.blog;
     const { title, content, genre } = req.body;
     try {
-        if (!req.files)
-            return res.status(403).json({ message: 'Image required' });
-        const file = req.files.image;
-        if (!file.mimetype.startsWith('image/'))
-            return res.status(403).json({ message: 'Please choose an image' });
-        if (image)
-            (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `blogs/${imageName}`));
-        const filename = file.mimetype.replace('image/', `${_blogId}.`);
-        const storageRef = (0, storage_1.ref)(storage, `blogs/${filename}`);
-        const metadata = {
-            contentType: file.mimetype,
-        };
-        yield (0, storage_1.uploadBytes)(storageRef, file.data, metadata);
-        const url = yield (0, storage_1.getDownloadURL)(storageRef);
-        yield Blog.findByIdAndUpdate(_blogId, {
-            image: url,
-            imageName: filename,
+        if (req.files) {
+            const file = req.files.image;
+            if (!file.mimetype.startsWith('image/'))
+                return res.status(403).json({ message: 'Please choose an image' });
+            if (image && imageName)
+                (0, deleteFile_1.default)(`blogs/${imageName}`);
+            const filename = file.mimetype.replace('image/', `${blogId}.`);
+            const fileUrl = yield (0, uploadFile_1.default)(file.data, file.mimetype, `blogs/${filename}`);
+            yield Blog_1.default.findByIdAndUpdate(blogId, {
+                image: fileUrl,
+                imageName: filename,
+            });
+        }
+        yield Blog_1.default.findByIdAndUpdate(blogId, {
             title,
             content,
             genre,
@@ -168,35 +107,139 @@ module.exports.updateBlog = asyncHandler((req, res) => __awaiter(void 0, void 0,
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.deleteBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id: _blogId, image, imageName } = res.locals.blog;
-    const { _id: _authorId } = res.locals.user;
+exports.deleteBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: authId } = res.locals.auth;
+    const { _id: blogId, image, imageName } = res.locals.blog;
     try {
-        if (image)
-            (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `blogs/${imageName}`));
-        yield Blog.findByIdAndDelete(_blogId);
-        yield User.findByIdAndUpdate(_authorId, { $pull: { blogs: _blogId } });
+        if (image && imageName)
+            (0, deleteFile_1.default)(`blogs/${imageName}`);
+        yield Blog_1.default.findByIdAndDelete(blogId);
+        yield User_1.default.findByIdAndUpdate(authId, { $pull: { blogs: blogId } });
         return res.status(200).json({ message: 'Blog Deleted Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.publishBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id: _blogId } = res.locals.blog;
+exports.genre = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.setHeader('Cache-Control', 'public,max-age=86400');
+    return res.status(200).json({ genre: misc_1.genre, message: 'Genre Fetched Successfully' });
+}));
+exports.publish = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: blogId } = res.locals.blog;
     try {
-        yield Blog.findByIdAndUpdate(_blogId, { isPublished: true });
+        yield Blog_1.default.findByIdAndUpdate(blogId, { isPublished: true });
         return res.status(200).json({ message: 'Blog Published Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.unpublishBlog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id: _blogId } = res.locals.blog;
+exports.unpublish = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { _id: blogId } = res.locals.blog;
     try {
-        yield Blog.findByIdAndUpdate(_blogId, { isPublished: false });
-        return res.status(200).json({ message: 'Blog Unpubished Successfully' });
+        yield Blog_1.default.findByIdAndUpdate(blogId, { isPublished: false });
+        return res.status(200).json({ message: 'Blog Unpublished Successfully' });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+exports.like = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { auth: { _id: authId }, blog: { _id: blogId, likesCount }, } = res.locals;
+    try {
+        const likeExist = yield Blog_1.default.findOne({
+            $and: [{ _id: blogId }, { likers: authId }],
+        });
+        if (likeExist)
+            return res.status(403).json({ message: 'Already Liked' });
+        yield Blog_1.default.findByIdAndUpdate(blogId, {
+            $push: { likers: authId },
+            likes: likesCount + 1,
+        });
+        yield User_1.default.findByIdAndUpdate(authId, {
+            $push: { liked: blogId },
+        });
+        return res.status(200).json({ message: 'Liked' });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+exports.unlike = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { auth: { _id: authId }, blog: { _id: blogId, likesCount }, } = res.locals;
+    try {
+        const likeExist = yield Blog_1.default.findOne({
+            $and: [{ _id: blogId }, { likers: authId }],
+        });
+        if (!likeExist)
+            return res.status(403).json({ message: 'ALready Unliked' });
+        yield Blog_1.default.findByIdAndUpdate(blogId, {
+            $pull: { likers: authId },
+            likes: likesCount - 1,
+        });
+        yield User_1.default.findByIdAndUpdate(authId, {
+            $pull: { liked: blogId },
+        });
+        return res.status(200).json({ message: 'Unliked' });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+exports.bookmark = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { auth: { _id: authId }, blog: { _id: blogId }, } = res.locals;
+    try {
+        const bookmarkExist = yield User_1.default.findOne({
+            $and: [{ _id: authId }, { bookmarks: blogId }],
+        });
+        if (bookmarkExist)
+            return res.status(403).json({ message: 'Already Bookmarked' });
+        yield User_1.default.findByIdAndUpdate(authId, { $push: { bookmarks: blogId } });
+        return res.status(200).json({ message: 'Bookmarked Successfully' });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+exports.unbookmark = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { auth: { _id: authId }, blog: { _id: blogId }, } = res.locals;
+    try {
+        const bookmarkExist = yield User_1.default.findOne({
+            $and: [{ _id: authId }, { bookmarks: blogId }],
+        });
+        if (!bookmarkExist)
+            return res.status(403).json({ message: 'Already Unbookmarked' });
+        yield User_1.default.findByIdAndUpdate(authId, { $pull: { bookmarks: blogId } });
+        return res.status(200).json({ message: 'Unbookmarked Successfully' });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+exports.comment = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { auth: { _id: authId }, blog: { _id: blogId, commentsCount }, } = res.locals;
+    const { comment } = req.body;
+    try {
+        yield Blog_1.default.findByIdAndUpdate(blogId, {
+            $push: { comments: { commenter: authId, comment } },
+            commentsCount: commentsCount + 1,
+        });
+        return res.status(200).json({ message: 'Comment Successfull' });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+exports.uncomment = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { auth: { _id: authId }, blog: { _id: blogId, commentsCount }, } = res.locals;
+    const { comment } = req.body;
+    try {
+        yield Blog_1.default.findByIdAndUpdate(blogId, {
+            $pull: { comments: { commenter: authId, comment } },
+            commentsCount: commentsCount - 1,
+        });
+        return res.status(200).json({ message: 'Comment Deleted Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });

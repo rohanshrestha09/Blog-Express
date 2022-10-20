@@ -1,261 +1,298 @@
 import { Request, Response } from 'express';
-import {
-  uploadBytes,
-  ref,
-  getDownloadURL,
-  getStorage,
-  deleteObject,
-} from 'firebase/storage';
-import { genre } from '../misc/misc';
+import uploadFile from '../middleware/uploadFile';
+import deleteFile from '../middleware/deleteFile';
+import Blog from '../model/Blog';
+import User from '../model/User';
+import { genre as genreCollection } from '../misc';
 const asyncHandler = require('express-async-handler');
-const Blog = require('../model/Blog');
-const User = require('../model/User');
 
-const storage = getStorage();
+export const blogs = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { sort, pageSize, genre, search } = req.query;
 
-module.exports.getAllBlogs = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { sort, pageSize } = req.query;
+  let query = { isPublished: true };
 
-    try {
-      switch (sort) {
-        case 'likes':
-          return res.status(200).json({
-            blogs: await Blog.find({})
-              .sort({ likes: -1 })
-              .limit(pageSize || 10),
-            message: 'Blogs Fetched Successfully',
-          });
+  if (genre) query = Object.assign({ genre: { $in: String(genre).split(',') } }, query);
 
-        case 'views':
-          return res.status(200).json({
-            blogs: await Blog.find({})
-              .sort({ views: -1 })
-              .limit(pageSize || 10),
-            message: 'Blogs Fetched Successfully',
-          });
+  if (search) query = Object.assign({ $text: { $search: String(search).toLowerCase() } }, query);
 
-        case 'latest':
-          return res.status(200).json({
-            blogs: await Blog.find({})
-              .sort({ createdAt: -1 })
-              .limit(pageSize || 10),
-            message: 'Blogs Fetched Successfully',
-          });
-
-        default:
-          return res.status(200).json({
-            blogs: await Blog.find({}).limit(pageSize || 10),
-            message: 'Blogs Fetched Successfully',
-          });
-      }
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+  try {
+    return res.status(200).json({
+      data: await Blog.find(query)
+        .sort({ [String(sort || 'likes')]: -1 })
+        .limit(Number(pageSize || 20))
+        .populate('author', '-password'),
+      count: await Blog.countDocuments(query),
+      message: 'Blogs Fetched Successfully',
+    });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.getCategorisedBlog = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { genre, sort, pageSize } = req.query;
-
-    try {
-      switch (sort) {
-        case 'likes':
-          return res.status(200).json({
-            blogs: await Blog.find({ genre })
-              .sort({ likes: -1 })
-              .limit(pageSize || 10),
-            message: 'Blogs Fetched Successfully',
-          });
-
-        case 'views':
-          return res.status(200).json({
-            blogs: await Blog.find({ genre })
-              .sort({ views: -1 })
-              .limit(pageSize || 10),
-            message: 'Blogs Fetched Successfully',
-          });
-
-        case 'latest':
-          return res.status(200).json({
-            blogs: await Blog.find({ genre })
-              .sort({ createdAt: -1 })
-              .limit(pageSize || 10),
-            message: 'Blogs Fetched Successfully',
-          });
-
-        default:
-          return res.status(200).json({
-            blogs: await Blog.find({ genre }).limit(pageSize || 10),
-            message: 'Blogs Fetched Successfully',
-          });
-      }
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+export const blog = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  try {
+    return res.status(200).json({ data: res.locals.blog, message: 'Blog Fetched Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.getBlog = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const blog = res.locals.blog;
+export const postBlog = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { _id: authId } = res.locals.auth;
 
-    try {
-      return res
-        .status(200)
-        .json({ blog, message: 'Blog Fetched Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+  const { title, content, genre, isPublished } = req.body;
+
+  try {
+    if (!req.files) return res.status(403).json({ message: 'Image required' });
+
+    const { _id: blogId } = await Blog.create({
+      author: authId,
+      title,
+      content,
+      genre,
+      isPublished,
+    });
+
+    const file = req.files.image as any;
+
+    if (!file.mimetype.startsWith('image/'))
+      return res.status(403).json({ message: 'Please choose an image' });
+
+    const filename = file.mimetype.replace('image/', `${blogId}.`);
+
+    const fileUrl = await uploadFile(file.data, file.mimetype, `blogs/${filename}`);
+
+    await Blog.findByIdAndUpdate(blogId, {
+      image: fileUrl,
+      imageName: filename,
+    });
+
+    await User.findByIdAndUpdate(authId, { $push: { blogs: blogId } });
+
+    return res.status(200).json({ message: 'Blog Posted Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.getGenre = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    return res
-      .status(200)
-      .json({ genre, message: 'Genre Fetched Successfully' });
-  }
-);
+export const updateBlog = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { _id: blogId, image, imageName } = res.locals.blog;
 
-module.exports.postBlog = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { _id: _authorId } = res.locals.user;
+  const { title, content, genre } = req.body;
 
-    const { title, content, genre, isPublished } = req.body;
-
-    try {
-      if (!req.files)
-        return res.status(403).json({ message: 'Image required' });
-
-      const { _id: _blogId } = await Blog.create({
-        author: _authorId,
-        title,
-        content,
-        genre,
-        isPublished,
-      });
-
+  try {
+    if (req.files) {
       const file = req.files.image as any;
 
       if (!file.mimetype.startsWith('image/'))
         return res.status(403).json({ message: 'Please choose an image' });
 
-      const filename = file.mimetype.replace('image/', `${_blogId}.`);
+      if (image && imageName) deleteFile(`blogs/${imageName}`);
 
-      const storageRef = ref(storage, `blogs/${filename}`);
+      const filename = file.mimetype.replace('image/', `${blogId}.`);
 
-      const metadata = {
-        contentType: file.mimetype,
-      };
+      const fileUrl = await uploadFile(file.data, file.mimetype, `blogs/${filename}`);
 
-      await uploadBytes(storageRef, file.data, metadata);
-
-      const url = await getDownloadURL(storageRef);
-
-      await Blog.findByIdAndUpdate(_blogId, {
-        image: url,
+      await Blog.findByIdAndUpdate(blogId, {
+        image: fileUrl,
         imageName: filename,
       });
-
-      await User.findByIdAndUpdate(_authorId, { $push: { blogs: _blogId } });
-
-      return res.status(200).json({ message: 'Blog Posted Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
     }
+
+    await Blog.findByIdAndUpdate(blogId, {
+      title,
+      content,
+      genre,
+    });
+
+    return res.status(200).json({ message: 'Blog Updated Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.updateBlog = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { _id: _blogId, image, imageName } = res.locals.blog;
+export const deleteBlog = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { _id: authId } = res.locals.auth;
 
-    const { title, content, genre } = req.body;
+  const { _id: blogId, image, imageName } = res.locals.blog;
 
-    try {
-      if (!req.files)
-        return res.status(403).json({ message: 'Image required' });
+  try {
+    if (image && imageName) deleteFile(`blogs/${imageName}`);
 
-      const file = req.files.image as any;
+    await Blog.findByIdAndDelete(blogId);
 
-      if (!file.mimetype.startsWith('image/'))
-        return res.status(403).json({ message: 'Please choose an image' });
+    await User.findByIdAndUpdate(authId, { $pull: { blogs: blogId } });
 
-      if (image) deleteObject(ref(storage, `blogs/${imageName}`));
-
-      const filename = file.mimetype.replace('image/', `${_blogId}.`);
-
-      const storageRef = ref(storage, `blogs/${filename}`);
-
-      const metadata = {
-        contentType: file.mimetype,
-      };
-
-      await uploadBytes(storageRef, file.data, metadata);
-
-      const url = await getDownloadURL(storageRef);
-
-      await Blog.findByIdAndUpdate(_blogId, {
-        image: url,
-        imageName: filename,
-        title,
-        content,
-        genre,
-      });
-
-      return res.status(200).json({ message: 'Blog Updated Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+    return res.status(200).json({ message: 'Blog Deleted Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.deleteBlog = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { _id: _blogId, image, imageName } = res.locals.blog;
+export const genre = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  res.setHeader('Cache-Control', 'public,max-age=86400');
 
-    const { _id: _authorId } = res.locals.user;
+  return res.status(200).json({ data: genreCollection, message: 'Genre Fetched Successfully' });
+});
 
-    try {
-      if (image) deleteObject(ref(storage, `blogs/${imageName}`));
+export const publish = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { _id: blogId } = res.locals.blog;
 
-      await Blog.findByIdAndDelete(_blogId);
+  try {
+    await Blog.findByIdAndUpdate(blogId, { isPublished: true });
 
-      await User.findByIdAndUpdate(_authorId, { $pull: { blogs: _blogId } });
-
-      return res.status(200).json({ message: 'Blog Deleted Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+    return res.status(200).json({ message: 'Blog Published Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.publishBlog = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { _id: _blogId } = res.locals.blog;
+export const unpublish = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { _id: blogId } = res.locals.blog;
 
-    try {
-      await Blog.findByIdAndUpdate(_blogId, { isPublished: true });
+  try {
+    await Blog.findByIdAndUpdate(blogId, { isPublished: false });
 
-      return res.status(200).json({ message: 'Blog Published Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+    return res.status(200).json({ message: 'Blog Unpublished Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.unpublishBlog = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { _id: _blogId } = res.locals.blog;
+export const like = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const {
+    auth: { _id: authId },
+    blog: { _id: blogId, likesCount },
+  } = res.locals;
 
-    try {
-      await Blog.findByIdAndUpdate(_blogId, { isPublished: false });
+  try {
+    const likeExist = await Blog.findOne({
+      $and: [{ _id: blogId }, { likers: authId }],
+    });
 
-      return res.status(200).json({ message: 'Blog Unpubished Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+    if (likeExist) return res.status(403).json({ message: 'Already Liked' });
+
+    await Blog.findByIdAndUpdate(blogId, {
+      $push: { likers: authId },
+      likes: likesCount + 1,
+    });
+
+    await User.findByIdAndUpdate(authId, {
+      $push: { liked: blogId },
+    });
+
+    return res.status(200).json({ message: 'Liked' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
+
+export const unlike = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const {
+    auth: { _id: authId },
+    blog: { _id: blogId, likesCount },
+  } = res.locals;
+
+  try {
+    const likeExist = await Blog.findOne({
+      $and: [{ _id: blogId }, { likers: authId }],
+    });
+
+    if (!likeExist) return res.status(403).json({ message: 'ALready Unliked' });
+
+    await Blog.findByIdAndUpdate(blogId, {
+      $pull: { likers: authId },
+      likes: likesCount - 1,
+    });
+
+    await User.findByIdAndUpdate(authId, {
+      $pull: { liked: blogId },
+    });
+
+    return res.status(200).json({ message: 'Unliked' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
+  }
+});
+
+export const bookmark = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const {
+    auth: { _id: authId },
+    blog: { _id: blogId },
+  } = res.locals;
+
+  try {
+    const bookmarkExist = await User.findOne({
+      $and: [{ _id: authId }, { bookmarks: blogId }],
+    });
+
+    if (bookmarkExist) return res.status(403).json({ message: 'Already Bookmarked' });
+
+    await User.findByIdAndUpdate(authId, { $push: { bookmarks: blogId } });
+
+    return res.status(200).json({ message: 'Bookmarked Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
+  }
+});
+
+export const unbookmark = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const {
+    auth: { _id: authId },
+    blog: { _id: blogId },
+  } = res.locals;
+
+  try {
+    const bookmarkExist = await User.findOne({
+      $and: [{ _id: authId }, { bookmarks: blogId }],
+    });
+
+    if (!bookmarkExist) return res.status(403).json({ message: 'Already Unbookmarked' });
+
+    await User.findByIdAndUpdate(authId, { $pull: { bookmarks: blogId } });
+
+    return res.status(200).json({ message: 'Unbookmarked Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
+  }
+});
+
+export const comment = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const {
+    auth: { _id: authId },
+    blog: { _id: blogId, commentsCount },
+  } = res.locals;
+
+  const { comment } = req.body;
+
+  try {
+    await Blog.findByIdAndUpdate(blogId, {
+      $push: { comments: { commenter: authId, comment } },
+      commentsCount: commentsCount + 1,
+    });
+
+    return res.status(200).json({ message: 'Comment Successfull' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
+  }
+});
+
+export const uncomment = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const {
+    auth: { _id: authId },
+    blog: { _id: blogId, commentsCount },
+  } = res.locals;
+
+  const { comment } = req.body;
+
+  try {
+    await Blog.findByIdAndUpdate(blogId, {
+      $pull: { comments: { commenter: authId, comment } },
+      commentsCount: commentsCount - 1,
+    });
+
+    return res.status(200).json({ message: 'Comment Deleted Successfully' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
+  }
+});

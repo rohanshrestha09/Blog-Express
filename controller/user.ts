@@ -1,16 +1,14 @@
 import { Request, Response } from 'express';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import moment from 'moment';
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+import bcrypt from 'bcryptjs';
+import { sign, Secret } from 'jsonwebtoken';
+import { serialize } from 'cookie';
+import uploadFile from '../middleware/uploadFile';
+import User from '../model/User';
+import Blog from '../model/Blog';
 const asyncHandler = require('express-async-handler');
-const User = require('../model/User');
 
-moment.suppressDeprecationWarnings = true;
-
-const storage = getStorage();
-
-module.exports.register = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+export const register = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
   const { fullname, email, password, confirmPassword, dateOfBirth } = req.body;
 
   try {
@@ -29,7 +27,7 @@ module.exports.register = asyncHandler(async (req: Request, res: Response): Prom
 
     const encryptedPassword: string = await bcrypt.hash(password, salt);
 
-    const { _id: _userId } = await User.create({
+    const { _id: authId } = await User.create({
       fullname,
       email,
       password: encryptedPassword,
@@ -42,35 +40,37 @@ module.exports.register = asyncHandler(async (req: Request, res: Response): Prom
       if (!file.mimetype.startsWith('image/'))
         return res.status(403).json({ message: 'Please choose an image' });
 
-      const filename = file.mimetype.replace('image/', `${_userId}.`);
+      const filename = file.mimetype.replace('image/', `${authId}.`);
 
-      const storageRef = ref(storage, `users/${filename}`);
+      const fileUrl = await uploadFile(file.data, file.mimetype, `users/${filename}`);
 
-      const metadata = {
-        contentType: file.mimetype,
-      };
-
-      await uploadBytes(storageRef, file.data, metadata);
-
-      const url = await getDownloadURL(storageRef);
-
-      await User.findByIdAndUpdate(_userId, {
-        image: url,
+      await User.findByIdAndUpdate(authId, {
+        image: fileUrl,
         imageName: filename,
       });
     }
 
-    const token: string = jwt.sign({ _id: _userId }, process.env.JWT_TOKEN, {
-      expiresIn: '20d',
+    const token: string = sign({ _id: authId }, process.env.JWT_TOKEN as Secret, {
+      expiresIn: '30d',
     });
 
+    const serialized = serialize('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 30,
+      path: '/',
+    });
+
+    res.setHeader('Set-Cookie', serialized);
+
     return res.status(200).json({ token, message: 'Signup Successful' });
-  } catch (err: any) {
+  } catch (err: Error | any) {
     return res.status(404).json({ message: err.message });
   }
 });
 
-module.exports.login = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+export const login = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
   const { email, password } = req.body;
 
   try {
@@ -78,114 +78,102 @@ module.exports.login = asyncHandler(async (req: Request, res: Response): Promise
 
     if (!user) return res.status(404).json({ message: 'User does not exist.' });
 
-    const isMatched: boolean = await bcrypt.compare(password, user.password);
+    const isMatched: boolean = await bcrypt.compare(password, user.password as string);
 
     if (!isMatched) return res.status(403).json({ message: 'Incorrect Password' });
 
-    const token: string = jwt.sign({ _id: user._id }, process.env.JWT_TOKEN, {
-      expiresIn: '20d',
+    const token: string = sign({ _id: user._id }, process.env.JWT_TOKEN as Secret, {
+      expiresIn: '30d',
     });
+
+    const serialized = serialize('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 30,
+      path: '/',
+    });
+
+    res.setHeader('Set-Cookie', serialized);
 
     return res.status(200).json({ token, message: 'Login Successful' });
-  } catch (err: any) {
+  } catch (err: Error | any) {
     return res.status(404).json({ message: err.message });
   }
 });
 
-module.exports.authSuccess = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    return res.status(200).json({ user: res.locals.user });
-  }
-);
-
-module.exports.getProfile = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+export const user = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
   try {
     return res.status(200).json({
-      user: res.locals.queryUser,
+      data: res.locals.user,
       message: 'User Fetched Successfully',
     });
-  } catch (err: any) {
+  } catch (err: Error | any) {
     return res.status(404).json({ message: err.message });
   }
 });
 
-module.exports.updateProfile = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { fullname, bio, dateOfBirth } = req.body;
+export const blog = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { blogs } = res.locals.user;
 
-    const { _id: _userId, image, imageName } = res.locals.user;
+  const { pageSize } = req.query;
 
-    try {
-      if (req.files) {
-        const file = req.files.image as any;
+  let query = { _id: blogs, isPublished: true };
 
-        if (!file.mimetype.startsWith('image/'))
-          return res.status(403).json({ message: 'Please choose an image' });
-
-        if (image) deleteObject(ref(storage, `users/${imageName}`));
-
-        const filename = file.mimetype.replace('image/', `${_userId}.`);
-
-        const storageRef = ref(storage, `users/${filename}`);
-
-        const metadata = {
-          contentType: file.mimetype,
-        };
-
-        await uploadBytes(storageRef, file.data, metadata);
-
-        const url = await getDownloadURL(storageRef);
-
-        await User.findByIdAndUpdate(_userId, {
-          image: url,
-          imageName: filename,
-        });
-      }
-
-      await User.findByIdAndUpdate(_userId, {
-        fullname,
-        bio,
-        dateOfBirth,
-      });
-
-      return res.status(200).json({ message: 'Profile Updated Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+  try {
+    return res.status(200).json({
+      data: await Blog.find(query)
+        .sort({ likes: -1 })
+        .limit(Number(pageSize || 20))
+        .populate('author', '-password'),
+      count: await Blog.countDocuments(query),
+      message: 'Blogs Fetched Successfully',
+    });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.deleteProfile = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { _id: _userId, image, imageName } = res.locals.user;
+export const followers = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { followers } = res.locals.user;
 
-    try {
-      if (image) deleteObject(ref(storage, `users/${imageName}`));
+  const { search, pageSize } = req.query;
 
-      await User.findByIdAndDelete(_userId);
+  let query = { _id: followers };
 
-      return res.status(200).json({ message: 'Profile Deleted Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+  if (search) query = Object.assign({ $text: { $search: String(search).toLowerCase() } }, query);
+
+  try {
+    return res.status(200).json({
+      message: 'Followers fetched successfully',
+      data: await User.find(query)
+        .select('-password')
+        .limit(Number(pageSize || 20)),
+      count: await User.countDocuments(query),
+    });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});
 
-module.exports.deleteProfileImage = asyncHandler(
-  async (req: Request, res: Response): Promise<Response> => {
-    const { _id: _userId, image, imageName } = res.locals.user;
+export const following = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { following } = res.locals.user;
 
-    try {
-      if (image) deleteObject(ref(storage, `users/${imageName}`));
+  const { search, pageSize } = req.query;
 
-      await User.findByIdAndUpdate(_userId, {
-        image: '',
-        imageName: '',
-      });
+  let query = { _id: following };
 
-      return res.status(200).json({ message: 'Profile Image Removed Successfully' });
-    } catch (err: any) {
-      return res.status(404).json({ message: err.message });
-    }
+  if (search) query = Object.assign({ $text: { $search: String(search).toLowerCase() } }, query);
+
+  try {
+    return res.status(200).json({
+      message: 'Following fetched successfully',
+      data: await User.find(query)
+        .select('-password')
+        .limit(Number(pageSize || 20)),
+      count: await User.countDocuments(query),
+    });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
   }
-);
+});

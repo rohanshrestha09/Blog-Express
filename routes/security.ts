@@ -1,32 +1,15 @@
-import express, { Router } from "express";
+import { Router } from 'express';
+import auth from '../middleware/auth';
+import validateUser from '../middleware/validateUser';
+import validatePassword from '../middleware/validatePassword';
+import { changePassword, resetLink, resetPassword } from '../controller/security';
 
-const {
-  resetPassword,
-  resetLink,
-  changePassword,
-} = require("../controller/security");
+const router: Router = Router();
 
-const userValidator = require("../middleware/userValidator");
+router.get('/security/reset-password', resetLink);
 
-const auth = require("../middleware/auth");
+router.post('/security/reset-password/:user/:token', validateUser, resetPassword);
 
-const passwordValidator = require("../middleware/passwordValidator");
-
-const router: Router = express.Router();
-
-router.get("/security/reset-password", resetLink);
-
-router.post(
-  "/security/reset-password/:_queryUserId/:token",
-  userValidator,
-  resetPassword
-);
-
-router.post(
-  "/security/change-password",
-  auth,
-  passwordValidator,
-  changePassword
-);
+router.post('/security/change-password', auth, validatePassword, changePassword);
 
 module.exports = router;

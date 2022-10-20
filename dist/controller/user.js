@@ -12,27 +12,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const storage_1 = require("firebase/storage");
+exports.blog = exports.user = exports.login = exports.register = void 0;
 const moment_1 = __importDefault(require("moment"));
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const jsonwebtoken_1 = require("jsonwebtoken");
+const cookie_1 = require("cookie");
+const uploadFile_1 = __importDefault(require("../middleware/uploadFile"));
+const User_1 = __importDefault(require("../model/User"));
+const Blog_1 = __importDefault(require("../model/Blog"));
 const asyncHandler = require('express-async-handler');
-const User = require('../model/User');
-moment_1.default.suppressDeprecationWarnings = true;
-const storage = (0, storage_1.getStorage)();
-module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { fullname, email, password, confirmPassword, dateOfBirth } = req.body;
     try {
-        const userExists = yield User.findOne({ email });
+        const userExists = yield User_1.default.findOne({ email });
         if (userExists)
             return res.status(403).json({ message: 'User already exists. Choose a different email.' });
         if (!password || password < 8)
             return res.status(403).json({ message: 'Password must contain atleast 8 characters.' });
         if (password !== confirmPassword)
             return res.status(403).json({ message: 'Password does not match.' });
-        const salt = yield bcrypt.genSalt(10);
-        const encryptedPassword = yield bcrypt.hash(password, salt);
-        const { _id: _userId } = yield User.create({
+        const salt = yield bcryptjs_1.default.genSalt(10);
+        const encryptedPassword = yield bcryptjs_1.default.hash(password, salt);
+        const { _id: authId } = yield User_1.default.create({
             fullname,
             email,
             password: encryptedPassword,
@@ -42,52 +43,60 @@ module.exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, v
             const file = req.files.image;
             if (!file.mimetype.startsWith('image/'))
                 return res.status(403).json({ message: 'Please choose an image' });
-            const filename = file.mimetype.replace('image/', `${_userId}.`);
-            const storageRef = (0, storage_1.ref)(storage, `users/${filename}`);
-            const metadata = {
-                contentType: file.mimetype,
-            };
-            yield (0, storage_1.uploadBytes)(storageRef, file.data, metadata);
-            const url = yield (0, storage_1.getDownloadURL)(storageRef);
-            yield User.findByIdAndUpdate(_userId, {
-                image: url,
+            const filename = file.mimetype.replace('image/', `${authId}.`);
+            const fileUrl = yield (0, uploadFile_1.default)(file.data, file.mimetype, `users/${filename}`);
+            yield User_1.default.findByIdAndUpdate(authId, {
+                image: fileUrl,
                 imageName: filename,
             });
         }
-        const token = jwt.sign({ _id: _userId }, process.env.JWT_TOKEN, {
-            expiresIn: '20d',
+        const token = (0, jsonwebtoken_1.sign)({ _id: authId }, process.env.JWT_TOKEN, {
+            expiresIn: '30d',
         });
+        const serialized = (0, cookie_1.serialize)('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV !== 'development',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24 * 30,
+            path: '/',
+        });
+        res.setHeader('Set-Cookie', serialized);
         return res.status(200).json({ token, message: 'Signup Successful' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.login = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.login = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
-        const user = yield User.findOne({ email }).select('+password');
+        const user = yield User_1.default.findOne({ email }).select('+password');
         if (!user)
             return res.status(404).json({ message: 'User does not exist.' });
-        const isMatched = yield bcrypt.compare(password, user.password);
+        const isMatched = yield bcryptjs_1.default.compare(password, user.password);
         if (!isMatched)
             return res.status(403).json({ message: 'Incorrect Password' });
-        const token = jwt.sign({ _id: user._id }, process.env.JWT_TOKEN, {
-            expiresIn: '20d',
+        const token = (0, jsonwebtoken_1.sign)({ _id: user._id }, process.env.JWT_TOKEN, {
+            expiresIn: '30d',
         });
+        const serialized = (0, cookie_1.serialize)('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV !== 'development',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 24 * 30,
+            path: '/',
+        });
+        res.setHeader('Set-Cookie', serialized);
         return res.status(200).json({ token, message: 'Login Successful' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.authSuccess = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    return res.status(200).json({ user: res.locals.user });
-}));
-module.exports.getProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.user = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         return res.status(200).json({
-            user: res.locals.queryUser,
+            user: res.locals.user,
             message: 'User Fetched Successfully',
         });
     }
@@ -95,61 +104,25 @@ module.exports.getProfile = asyncHandler((req, res) => __awaiter(void 0, void 0,
         return res.status(404).json({ message: err.message });
     }
 }));
-module.exports.updateProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { fullname, bio, dateOfBirth } = req.body;
-    const { _id: _userId, image, imageName } = res.locals.user;
+exports.blog = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { blogs } = res.locals.user;
+    const { sort, pageSize, genre } = req.query;
+    let query = { _id: blogs, isPublished: true };
+    if (genre)
+        query = Object.assign({
+            genre: {
+                $in: Array.isArray(genre) ? genre : typeof genre === 'string' && genre.split(','),
+            },
+        }, query);
     try {
-        if (req.files) {
-            const file = req.files.image;
-            if (!file.mimetype.startsWith('image/'))
-                return res.status(403).json({ message: 'Please choose an image' });
-            if (image)
-                (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `users/${imageName}`));
-            const filename = file.mimetype.replace('image/', `${_userId}.`);
-            const storageRef = (0, storage_1.ref)(storage, `users/${filename}`);
-            const metadata = {
-                contentType: file.mimetype,
-            };
-            yield (0, storage_1.uploadBytes)(storageRef, file.data, metadata);
-            const url = yield (0, storage_1.getDownloadURL)(storageRef);
-            yield User.findByIdAndUpdate(_userId, {
-                image: url,
-                imageName: filename,
-            });
-        }
-        yield User.findByIdAndUpdate(_userId, {
-            fullname,
-            bio,
-            dateOfBirth,
+        return res.status(200).json({
+            data: yield Blog_1.default.find(query)
+                .sort({ [(typeof sort === 'string' && sort) || 'likes']: -1 })
+                .limit(Number(pageSize || 20))
+                .populate('author', '-password'),
+            count: yield Blog_1.default.countDocuments(genre ? { isPublished: true, genre } : { isPublished: true }),
+            message: 'Blogs Fetched Successfully',
         });
-        return res.status(200).json({ message: 'Profile Updated Successfully' });
-    }
-    catch (err) {
-        return res.status(404).json({ message: err.message });
-    }
-}));
-module.exports.deleteProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id: _userId, image, imageName } = res.locals.user;
-    try {
-        if (image)
-            (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `users/${imageName}`));
-        yield User.findByIdAndDelete(_userId);
-        return res.status(200).json({ message: 'Profile Deleted Successfully' });
-    }
-    catch (err) {
-        return res.status(404).json({ message: err.message });
-    }
-}));
-module.exports.deleteProfileImage = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { _id: _userId, image, imageName } = res.locals.user;
-    try {
-        if (image)
-            (0, storage_1.deleteObject)((0, storage_1.ref)(storage, `users/${imageName}`));
-        yield User.findByIdAndUpdate(_userId, {
-            image: '',
-            imageName: '',
-        });
-        return res.status(200).json({ message: 'Profile Image Removed Successfully' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });

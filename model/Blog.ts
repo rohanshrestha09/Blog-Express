@@ -1,9 +1,9 @@
 import { Schema, model } from 'mongoose';
-import { genre } from '../misc/misc';
+import { genre } from '../misc';
 
 const BlogSchema = new Schema(
   {
-    author: { type: Schema.Types.ObjectId, required: [true, 'Author missing'] },
+    author: { type: Schema.Types.ObjectId, ref: 'User', required: [true, 'Author missing'] },
     image: String,
     imageName: String,
     title: {
@@ -19,23 +19,22 @@ const BlogSchema = new Schema(
       required: [true, 'Atleast one genre required'],
       validate: [
         function arrayLimit(val: any) {
-          return val.length <= 5;
+          return val.length <= 4;
         },
-        'Only 5 genre allowed',
+        'Only 4 genre allowed',
       ],
       enum: {
         values: genre as Array<String>,
         message: '{VALUE} not supported',
       },
     },
-    likers: [Schema.Types.ObjectId],
-    likes: { type: Number, default: 0 },
-    viewers: [Schema.Types.ObjectId],
-    views: { type: Number, default: 0 },
+    likers: { type: [Schema.Types.ObjectId], default: [] },
+    likesCount: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
-    comments: [{ commenter: Schema.Types.ObjectId, comment: String }],
+    comments: { type: [{ commenter: Schema.Types.ObjectId, comment: String }], default: [] },
+    commentsCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-module.exports = model('Blog', BlogSchema);
+export default model('Blog', BlogSchema);

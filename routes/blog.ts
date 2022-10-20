@@ -1,40 +1,56 @@
-import express, { Router } from 'express';
-const {
-  getAllBlogs,
-  getCategorisedBlog,
-  getBlog,
-  getGenre,
-  postBlog,
-  updateBlog,
+import { NextFunction, Request, Router } from 'express';
+import {
+  blog,
+  blogs,
+  comment,
   deleteBlog,
-  publishBlog,
-  unpublishBlog,
-} = require('../controller/blog');
+  genre,
+  like,
+  postBlog,
+  publish,
+  uncomment,
+  unlike,
+  unpublish,
+  updateBlog,
+} from '../controller/blog';
+import auth from '../middleware/auth';
+import validateBlog from '../middleware/validateBlog';
 
-const auth = require('../middleware/auth');
+const router: Router = Router();
 
-const blogValidator = require('../middleware/blogValidator');
+router.use(
+  ['/blog', '/blog/*'],
+  (req: Request, _, next: NextFunction) => {
+    req.shouldSkip = req.method === 'GET';
+    next();
+  },
+  auth
+);
 
-const router: Router = express.Router();
+router.use(['/blog/:blog', '/blog/:blog/*'], validateBlog);
 
-router.get('/blog', getAllBlogs);
+router.get('/blog', blogs);
 
-router.get('/blog/categorised', getCategorisedBlog);
+router.get('/blog/:blog', blog);
 
-router.get('/blog/:_blogId', blogValidator, getBlog);
+router.post('/blog', postBlog);
 
-router.get('/blog/genre', getGenre);
+router.put('/blog/:blog', updateBlog);
 
-router.use(['/blog/:_blogId', '/blog/:_blogId/publish'], auth, blogValidator);
+router.delete('/blog/:blog', deleteBlog);
 
-router.post('/blog', auth, postBlog);
+router.get('/blog/genre', genre);
 
-router.put('/blog/:_blogId', updateBlog);
+router.post('/blog/:blog/publish', publish);
 
-router.delete('/blog/:_blogId', deleteBlog);
+router.delete('/blog/:blog/publish', unpublish);
 
-router.post('/blog/:_blogId/publish', publishBlog);
+router.post('/blog/:blog/like', like);
 
-router.delete('/blog/:_blogId/publish', unpublishBlog);
+router.delete('/blog/:blog/like', unlike);
+
+router.post('/blog/:blog/comment', comment);
+
+router.delete('/blog/:blog/comment', uncomment);
 
 module.exports = router;

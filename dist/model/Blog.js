@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
-const misc_1 = require("../misc/misc");
+const misc_1 = require("../misc");
 const BlogSchema = new mongoose_1.Schema({
-    author: { type: mongoose_1.Schema.Types.ObjectId, required: [true, 'Author missing'] },
+    author: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: [true, 'Author missing'] },
     image: String,
     imageName: String,
     title: {
@@ -19,20 +19,19 @@ const BlogSchema = new mongoose_1.Schema({
         required: [true, 'Atleast one genre required'],
         validate: [
             function arrayLimit(val) {
-                return val.length <= 5;
+                return val.length <= 4;
             },
-            'Only 5 genre allowed',
+            'Only 4 genre allowed',
         ],
         enum: {
             values: misc_1.genre,
             message: '{VALUE} not supported',
         },
     },
-    likers: [mongoose_1.Schema.Types.ObjectId],
-    likes: { type: Number, default: 0 },
-    viewers: [mongoose_1.Schema.Types.ObjectId],
-    views: { type: Number, default: 0 },
+    likers: { type: [mongoose_1.Schema.Types.ObjectId], default: [] },
+    likesCount: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
-    comments: [{ commenter: mongoose_1.Schema.Types.ObjectId, comment: String }],
+    comments: { type: [{ commenter: mongoose_1.Schema.Types.ObjectId, comment: String }], default: [] },
+    commentsCount: { type: Number, default: 0 },
 }, { timestamps: true });
-module.exports = (0, mongoose_1.model)('Blog', BlogSchema);
+exports.default = (0, mongoose_1.model)('Blog', BlogSchema);

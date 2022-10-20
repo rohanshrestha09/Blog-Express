@@ -4,40 +4,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const app_1 = require("firebase-admin/app");
 const db_1 = __importDefault(require("./db"));
 const express_fileupload_1 = __importDefault(require("express-fileupload"));
-const app_1 = require("firebase/app");
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 require('dotenv').config({ path: __dirname + '/.env' });
 const app = (0, express_1.default)();
 app.use(express_1.default.urlencoded({ extended: false }));
+app.use(cookieParser());
 app.use(cors());
 app.use(bodyParser.json());
 app.use((0, express_fileupload_1.default)());
 (0, db_1.default)();
-const PORT = process.env.PORT;
-const firebaseConfig = {
-    apiKey: process.env.API_KEY,
-    authDomain: 'blog-sansar.firebaseapp.com',
-    projectId: 'blog-sansar',
-    storageBucket: 'blog-sansar.appspot.com',
-    messagingSenderId: process.env.MESSAGING_SENDER_ID,
-    appId: process.env.APP_ID,
-    measurementId: process.env.MEASUREMENT_ID,
-};
-// Initialize Firebase
-(0, app_1.initializeApp)(firebaseConfig);
+const PORT = process.env.PORT || 3000;
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
 });
+const serviceAccount = require('./blog-sansar-firebase-adminsdk-8snwe-96b9089a8c.json');
+(0, app_1.initializeApp)({
+    credential: (0, app_1.cert)(serviceAccount),
+    storageBucket: 'gs://blog-sansar.appspot.com',
+});
 app.use(limiter);
+app.use('/api', require('./routes/auth'));
 app.use('/api', require('./routes/user'));
 app.use('/api', require('./routes/security'));
 app.use('/api', require('./routes/blog'));
-app.use('/api', require('./routes/userActivity'));
 app.listen(PORT);

@@ -12,28 +12,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const jsonwebtoken_1 = require("jsonwebtoken");
-const cookie_1 = require("cookie");
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const User_1 = __importDefault(require("../model/User"));
 exports.default = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    if (req.shouldSkip)
-        return next();
-    const { token } = req.cookies;
-    if (!token)
-        return res.status(401).json({ message: 'Not authorised' });
+    const { user: userId } = req.params || req.query;
     try {
-        const { _id } = (0, jsonwebtoken_1.verify)(token, process.env.JWT_TOKEN);
-        const auth = yield User_1.default.findById(_id).select('-password');
-        if (!auth) {
-            const serialized = (0, cookie_1.serialize)('token', '', {
-                maxAge: 0,
-                path: '/',
-            });
-            res.setHeader('Set-Cookie', serialized);
+        const user = yield User_1.default.findById(userId).select('-password');
+        if (!user)
             return res.status(404).json({ message: 'User does not exist' });
-        }
-        res.locals.auth = auth;
+        res.locals.user = user;
         next();
     }
     catch (err) {

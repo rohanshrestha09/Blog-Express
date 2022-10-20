@@ -1,36 +1,21 @@
-import express, { Router } from "express";
-const {
-  register,
-  login,
-  getProfile,
-  authSuccess,
-  updateProfile,
-  deleteProfile,
-  deleteProfileImage,
-} = require("../controller/user");
+import { Router } from 'express';
+import validateUser from '../middleware/validateUser';
+import { blog, followers, following, login, register, user } from '../controller/user';
 
-const auth = require("../middleware/auth");
+const router: Router = Router();
 
-const passwordValidator = require("../middleware/passwordValidator");
+router.use(['/user/*'], validateUser);
 
-const userValidator = require("../middleware/userValidator");
+router.post('/register', register);
 
-const router: Router = express.Router();
+router.post('/login', login);
 
-router.post("/register", register);
+router.get('/user/:user', user);
 
-router.post("/login", login);
+router.get('user/:user/blog', blog);
 
-router.get("/profile/:_queryUserId", userValidator, getProfile);
+router.get('user/:user/followers', followers);
 
-router.use(["/auth", "/profile", "/profile/image"], auth);
-
-router.get("/auth", authSuccess);
-
-router.put("/profile", passwordValidator, updateProfile);
-
-router.delete("/profile", passwordValidator, deleteProfile);
-
-router.delete("/profile/image", deleteProfileImage);
+router.get('user/:user/following', following);
 
 module.exports = router;
