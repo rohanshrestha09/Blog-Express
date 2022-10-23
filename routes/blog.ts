@@ -1,4 +1,4 @@
-import { NextFunction, Request, Router } from 'express';
+import { Router } from 'express';
 import {
   blog,
   blogs,
@@ -8,6 +8,7 @@ import {
   like,
   postBlog,
   publish,
+  suggestions,
   uncomment,
   unlike,
   unpublish,
@@ -18,28 +19,23 @@ import validateBlog from '../middleware/validateBlog';
 
 const router: Router = Router();
 
-router.use(
-  ['/blog', '/blog/*'],
-  (req: Request, _, next: NextFunction) => {
-    req.shouldSkip = req.method === 'GET';
-    next();
-  },
-  auth
-);
+router.get('/blog', blogs);
+
+router.get('/blog/suggestions', suggestions);
+
+router.get('/blog/genre', genre);
 
 router.use(['/blog/:blog', '/blog/:blog/*'], validateBlog);
 
-router.get('/blog', blogs);
-
 router.get('/blog/:blog', blog);
+
+router.use(['/blog', '/blog/*'], auth);
 
 router.post('/blog', postBlog);
 
 router.put('/blog/:blog', updateBlog);
 
 router.delete('/blog/:blog', deleteBlog);
-
-router.get('/blog/genre', genre);
 
 router.post('/blog/:blog/publish', publish);
 

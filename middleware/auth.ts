@@ -4,18 +4,16 @@ import { serialize } from 'cookie';
 import asyncHandler from 'express-async-handler';
 import User from '../model/User';
 
-declare global {
+/*declare global {
   namespace Express {
     interface Request {
       shouldSkip: boolean;
     }
   }
-}
+}*/
 
 export default asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<any> => {
-    if (req.shouldSkip) return next();
-
     const { token } = req.cookies;
 
     if (!token) return res.status(401).json({ message: 'Not authorised' });

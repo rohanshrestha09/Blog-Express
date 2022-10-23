@@ -177,3 +177,20 @@ export const following = asyncHandler(async (req: Request, res: Response): Promi
     return res.status(404).json({ message: err.message });
   }
 });
+
+export const suggestions = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { pageSize } = req.query;
+
+  try {
+    return res.status(200).json({
+      data: await User.find({})
+        .select('-password')
+        .sort({ followersCount: -1 })
+        .limit(Number(pageSize || 20)),
+      count: await User.countDocuments({}),
+      message: 'Users Fetched Successfully',
+    });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
+  }
+});

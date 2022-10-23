@@ -37,6 +37,22 @@ export const blog = asyncHandler(async (req: Request, res: Response): Promise<Re
   }
 });
 
+export const suggestions = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  const { pageSize } = req.query;
+
+  try {
+    return res.status(200).json({
+      data: await Blog.aggregate([
+        { $sample: { size: Number(pageSize || 4) }, $match: { isPublished: true } },
+      ]),
+      count: await Blog.countDocuments({ isPublished: true }),
+      message: 'Blogs Fetched Successfully',
+    });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
+  }
+});
+
 export const postBlog = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
   const { _id: authId } = res.locals.auth;
 
@@ -174,7 +190,7 @@ export const like = asyncHandler(async (req: Request, res: Response): Promise<Re
 
     await Blog.findByIdAndUpdate(blogId, {
       $push: { likers: authId },
-      likes: likesCount + 1,
+      likesCount: likesCount + 1,
     });
 
     await User.findByIdAndUpdate(authId, {
@@ -202,7 +218,7 @@ export const unlike = asyncHandler(async (req: Request, res: Response): Promise<
 
     await Blog.findByIdAndUpdate(blogId, {
       $pull: { likers: authId },
-      likes: likesCount - 1,
+      likesCount: likesCount - 1,
     });
 
     await User.findByIdAndUpdate(authId, {
