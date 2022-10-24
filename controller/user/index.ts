@@ -3,9 +3,8 @@ import moment from 'moment';
 import bcrypt from 'bcryptjs';
 import { sign, Secret } from 'jsonwebtoken';
 import { serialize } from 'cookie';
-import uploadFile from '../middleware/uploadFile';
-import User from '../model/User';
-import Blog from '../model/Blog';
+import uploadFile from '../../middleware/uploadFile';
+import User from '../../model/User';
 const asyncHandler = require('express-async-handler');
 
 export const register = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
@@ -113,78 +112,13 @@ export const user = asyncHandler(async (req: Request, res: Response): Promise<Re
   }
 });
 
-export const blog = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
-  const { blogs } = res.locals.user;
-
-  const { pageSize } = req.query;
-
-  let query = { _id: blogs, isPublished: true };
-
-  try {
-    return res.status(200).json({
-      data: await Blog.find(query)
-        .sort({ likes: -1 })
-        .limit(Number(pageSize || 20))
-        .populate('author', '-password'),
-      count: await Blog.countDocuments(query),
-      message: 'Blogs Fetched Successfully',
-    });
-  } catch (err: Error | any) {
-    return res.status(404).json({ message: err.message });
-  }
-});
-
-export const followers = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
-  const { followers } = res.locals.user;
-
-  const { search, pageSize } = req.query;
-
-  let query = { _id: followers };
-
-  if (search) query = Object.assign({ $text: { $search: String(search).toLowerCase() } }, query);
-
-  try {
-    return res.status(200).json({
-      message: 'Followers fetched successfully',
-      data: await User.find(query)
-        .select('-password')
-        .limit(Number(pageSize || 20)),
-      count: await User.countDocuments(query),
-    });
-  } catch (err: Error | any) {
-    return res.status(404).json({ message: err.message });
-  }
-});
-
-export const following = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
-  const { following } = res.locals.user;
-
-  const { search, pageSize } = req.query;
-
-  let query = { _id: following };
-
-  if (search) query = Object.assign({ $text: { $search: String(search).toLowerCase() } }, query);
-
-  try {
-    return res.status(200).json({
-      message: 'Following fetched successfully',
-      data: await User.find(query)
-        .select('-password')
-        .limit(Number(pageSize || 20)),
-      count: await User.countDocuments(query),
-    });
-  } catch (err: Error | any) {
-    return res.status(404).json({ message: err.message });
-  }
-});
-
 export const suggestions = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
   const { pageSize } = req.query;
 
   try {
     return res.status(200).json({
       data: await User.find({})
-        .select('-password')
+        .select('-password -email')
         .sort({ followersCount: -1 })
         .limit(Number(pageSize || 20)),
       count: await User.countDocuments({}),

@@ -1,10 +1,10 @@
 import { Response, Request, NextFunction } from 'express';
-import asyncHandler from 'express-async-handler';
 import bcrypt from 'bcryptjs';
 import User from '../model/User';
+const asyncHandler = require('express-async-handler');
 
 export default asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
     const { _id: authId } = res.locals.auth;
 
     const { password } = req.body;

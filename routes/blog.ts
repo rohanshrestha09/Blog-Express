@@ -1,19 +1,9 @@
 import { Router } from 'express';
-import {
-  blog,
-  blogs,
-  comment,
-  deleteBlog,
-  genre,
-  like,
-  postBlog,
-  publish,
-  suggestions,
-  uncomment,
-  unlike,
-  unpublish,
-  updateBlog,
-} from '../controller/blog';
+import { blog, blogs, suggestions, postBlog, updateBlog, deleteBlog } from '../controller/blog';
+import { genre } from '../controller/blog/genre';
+import { publish, unpublish } from '../controller/blog/publish';
+import { likes, like, unlike } from '../controller/blog/like';
+import { comments, comment, uncomment } from '../controller/blog/comment';
 import auth from '../middleware/auth';
 import validateBlog from '../middleware/validateBlog';
 
@@ -28,6 +18,10 @@ router.get('/blog/genre', genre);
 router.use(['/blog/:blog', '/blog/:blog/*'], validateBlog);
 
 router.get('/blog/:blog', blog);
+
+router.get('/blog/:blog/like', likes);
+
+router.get('/blog/:blog/comment', comments);
 
 router.use(['/blog', '/blog/*'], auth);
 

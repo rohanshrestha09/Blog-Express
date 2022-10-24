@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import { JwtPayload, Secret, verify } from 'jsonwebtoken';
 import { serialize } from 'cookie';
-import asyncHandler from 'express-async-handler';
 import User from '../model/User';
+const asyncHandler = require('express-async-handler');
 
 /*declare global {
   namespace Express {
@@ -13,7 +13,7 @@ import User from '../model/User';
 }*/
 
 export default asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
     const { token } = req.cookies;
 
     if (!token) return res.status(401).json({ message: 'Not authorised' });

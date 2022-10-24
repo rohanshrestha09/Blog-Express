@@ -1,16 +1,18 @@
 import { Router } from 'express';
 import validateUser from '../middleware/validateUser';
-import { blog, followers, following, login, register, suggestions, user } from '../controller/user';
+import { login, register, suggestions, user } from '../controller/user';
+import { blog } from '../controller/user/blog';
+import { followers, following } from '../controller/user/followers';
 
 const router: Router = Router();
 
 router.get('/user/suggestions', suggestions);
 
-router.use(['/user/*'], validateUser);
-
 router.post('/register', register);
 
 router.post('/login', login);
+
+router.use(['/user/*'], validateUser);
 
 router.get('/user/:user', user);
 

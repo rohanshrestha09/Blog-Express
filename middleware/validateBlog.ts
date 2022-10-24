@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import asyncHandler from 'express-async-handler';
 import Blog from '../model/Blog';
+const asyncHandler = require('express-async-handler');
 
 export default asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
     const { blog: blogId } = req.params || req.query;
 
     try {
-      const blog = await Blog.findById(blogId).populate('author', '-password');
+      const blog = await Blog.findById(blogId).populate('author', 'fullname image');
 
       if (!blog) return res.status(404).json({ message: 'Blog does not exist' });
 

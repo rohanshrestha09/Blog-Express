@@ -2,20 +2,10 @@ import { Router } from 'express';
 import auth from '../middleware/auth';
 import validateUser from '../middleware/validateUser';
 import validatePassword from '../middleware/validatePassword';
-import {
-  authHandler,
-  blogs,
-  bookmarks,
-  deleteImage,
-  deleteProfile,
-  follow,
-  followers,
-  following,
-  followingBlogs,
-  logout,
-  unfollow,
-  updateProfile,
-} from '../controller/auth';
+import { authHandler, deleteImage, deleteProfile, logout, updateProfile } from '../controller/auth';
+import { blogs, bookmarks, followingBlogs } from '../controller/auth/blog';
+import { follow, unfollow } from '../controller/auth/follow';
+import { followers, following } from '../controller/user/followers';
 
 const router: Router = Router();
 
