@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import { initializeApp, cert } from 'firebase-admin/app';
-import connectDB from './db';
 import fileUpload from 'express-fileupload';
+import connectDB from './db';
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const bodyParser = require('body-parser');

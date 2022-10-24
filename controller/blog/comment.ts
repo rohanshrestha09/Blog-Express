@@ -15,7 +15,7 @@ export const comments = asyncHandler(async (req: Request, res: Response): Promis
     );
 
     const commentsOutput = comments.map(({ user, comment }) => {
-      return { user: users.find(({ _id }) => _id === user), comment };
+      return { user: users.find(({ _id }) => _id.toString() === user.toString()), comment };
     });
 
     return res.status(200).json({
