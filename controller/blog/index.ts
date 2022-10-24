@@ -131,11 +131,16 @@ export const deleteBlog = asyncHandler(async (req: Request, res: Response): Prom
 export const suggestions = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
   const { pageSize } = req.query;
 
+  const blogs = await Blog.aggregate([
+    { $sample: { size: Number(pageSize || 4) } },
+    { $match: { isPublished: true } },
+  ]);
+
+  await User.populate(blogs, { path: 'author', select: 'fullname image' });
+
   try {
     return res.status(200).json({
-      data: await Blog.aggregate([
-        { $sample: { size: Number(pageSize || 4) }, $match: { isPublished: true } },
-      ]),
+      data: blogs,
       count: await Blog.countDocuments({ isPublished: true }),
       message: 'Blogs Fetched Successfully',
     });
