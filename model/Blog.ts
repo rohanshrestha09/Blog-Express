@@ -1,11 +1,34 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, Types } from 'mongoose';
 import { genre } from '../misc';
 
-const BlogSchema = new Schema(
+interface IBlogSchema {
+  author: Types.ObjectId;
+  image: string;
+  imageName: string;
+  title: string;
+  content: string;
+  genre: {
+    type: StringConstructor[];
+    required: [true, string];
+    validate: [(val: any) => boolean, string];
+    enum: { values: String[]; message: string };
+  };
+  likers: Types.ObjectId[];
+  likesCount: number;
+  comments: Types.ObjectId[];
+  commentsCount: number;
+  isPublished: boolean;
+}
+
+const BlogSchema = new Schema<IBlogSchema>(
   {
-    author: { type: Schema.Types.ObjectId, ref: 'User', required: [true, 'Author missing'] },
-    image: String,
-    imageName: String,
+    author: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Author missing'],
+    },
+    image: { type: String, default: null },
+    imageName: { type: String, default: null },
     title: {
       type: String,
       required: [true, 'Title missing'],
@@ -18,7 +41,7 @@ const BlogSchema = new Schema(
       type: [String],
       required: [true, 'Atleast one genre required'],
       validate: [
-        function arrayLimit(val: any) {
+        function (val: any) {
           return val.length <= 4;
         },
         'Only 4 genre allowed',
@@ -30,11 +53,11 @@ const BlogSchema = new Schema(
     },
     likers: { type: [Schema.Types.ObjectId], default: [] },
     likesCount: { type: Number, default: 0 },
-    isPublished: { type: Boolean, default: false },
-    comments: { type: [{ user: Schema.Types.ObjectId, comment: String }], default: [] },
+    comments: { type: [Schema.Types.ObjectId], default: [] },
     commentsCount: { type: Number, default: 0 },
+    isPublished: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-export default model('Blog', BlogSchema);
+export default model<IBlogSchema>('Blog', BlogSchema);

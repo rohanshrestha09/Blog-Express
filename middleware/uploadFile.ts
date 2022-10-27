@@ -12,7 +12,7 @@ export default async (targetFile: Buffer, contentType: string, filename: string)
     .save(targetFile, { metadata: { contentType, firebaseStorageDownloadTokens: uuid } })
     .then(async () => await file.makePublic());
 
-  return `https://firebasestorage.googleapis.com/v0/b/blog-sansar.appspot.com/o/'${encodeURIComponent(
+  return `https://firebasestorage.googleapis.com/v0/b/blog-sansar.appspot.com/o/${encodeURIComponent(
     file.name
   )}?alt=media&token=${uuid}`;
 };

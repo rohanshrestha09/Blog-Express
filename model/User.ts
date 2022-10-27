@@ -1,6 +1,23 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, Types } from 'mongoose';
 
-const UserSchema = new Schema(
+interface IUserSchema {
+  fullname: string;
+  email: string;
+  password: string;
+  dateOfBirth: Date;
+  image: string;
+  imageName: string;
+  bookmarks: Types.ObjectId[];
+  blogs: Types.ObjectId[];
+  bio: string;
+  website: string;
+  following: Types.ObjectId[];
+  followingCount: number;
+  followers: Types.ObjectId[];
+  followersCount: number;
+}
+
+const UserSchema = new Schema<IUserSchema>(
   {
     fullname: {
       type: String,
@@ -36,4 +53,4 @@ const UserSchema = new Schema(
   { timestamps: true }
 );
 
-export default model('User', UserSchema);
+export default model<IUserSchema>('User', UserSchema);

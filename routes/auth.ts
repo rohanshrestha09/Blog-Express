@@ -5,13 +5,13 @@ import validatePassword from '../middleware/validatePassword';
 import { authHandler, deleteImage, deleteProfile, logout, updateProfile } from '../controller/auth';
 import { blogs, bookmarks, followingBlogs } from '../controller/auth/blog';
 import { follow, unfollow } from '../controller/auth/follow';
-import { followers, following } from '../controller/user/followers';
+import { followers, following } from '../controller/auth/followers';
 
 const router: Router = Router();
 
 router.use(['/auth', '/auth/*'], auth);
 
-router.use(['/auth/:user/follow'], validateUser);
+router.param('user', validateUser);
 
 router.get('/auth', authHandler);
 

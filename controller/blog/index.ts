@@ -19,7 +19,7 @@ export const blogs = asyncHandler(async (req: Request, res: Response): Promise<R
       data: await Blog.find(query)
         .sort({ [String(sort || 'likes')]: -1 })
         .limit(Number(pageSize || 20))
-        .populate('author', '-password -email'),
+        .populate('author', 'fullname image'),
       count: await Blog.countDocuments(query),
       message: 'Blogs Fetched Successfully',
     });
@@ -42,8 +42,6 @@ export const postBlog = asyncHandler(async (req: Request, res: Response): Promis
   const { title, content, genre, isPublished } = req.body;
 
   try {
-    if (!req.files) return res.status(403).json({ message: 'Image required' });
-
     const { _id: blogId } = await Blog.create({
       author: authId,
       title,
@@ -52,19 +50,21 @@ export const postBlog = asyncHandler(async (req: Request, res: Response): Promis
       isPublished,
     });
 
-    const file = req.files.image as any;
+    if (req.files) {
+      const file = req.files.image as any;
 
-    if (!file.mimetype.startsWith('image/'))
-      return res.status(403).json({ message: 'Please choose an image' });
+      if (!file.mimetype.startsWith('image/'))
+        return res.status(403).json({ message: 'Please choose an image' });
 
-    const filename = file.mimetype.replace('image/', `${blogId}.`);
+      const filename = file.mimetype.replace('image/', `${blogId}.`);
 
-    const fileUrl = await uploadFile(file.data, file.mimetype, `blogs/${filename}`);
+      const fileUrl = await uploadFile(file.data, file.mimetype, `blogs/${filename}`);
 
-    await Blog.findByIdAndUpdate(blogId, {
-      image: fileUrl,
-      imageName: filename,
-    });
+      await Blog.findByIdAndUpdate(blogId, {
+        image: fileUrl,
+        imageName: filename,
+      });
+    }
 
     await User.findByIdAndUpdate(authId, { $push: { blogs: blogId } });
 

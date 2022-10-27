@@ -6,6 +6,8 @@ import deleteFile from '../../middleware/deleteFile';
 import User from '../../model/User';
 const asyncHandler = require('express-async-handler');
 
+moment.suppressDeprecationWarnings = true;
+
 export const authHandler = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
   return res.status(200).json({ data: res.locals.auth, message: 'Authentication Success' });
 });

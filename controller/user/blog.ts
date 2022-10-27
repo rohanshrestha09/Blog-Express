@@ -14,7 +14,7 @@ export const blog = asyncHandler(async (req: Request, res: Response): Promise<Re
       data: await Blog.find(query)
         .sort({ likes: -1 })
         .limit(Number(pageSize || 20))
-        .populate('author', '-password -email'),
+        .populate('author', 'fullname image'),
       count: await Blog.countDocuments(query),
       message: 'Blogs Fetched Successfully',
     });

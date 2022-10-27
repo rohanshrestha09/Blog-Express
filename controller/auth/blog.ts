@@ -20,7 +20,7 @@ export const blogs = asyncHandler(async (req: Request, res: Response): Promise<R
       data: await Blog.find(query)
         .sort({ [String(sort || 'likes')]: sortOrder === 'asc' ? 1 : -1 })
         .limit(Number(pageSize || 20))
-        .populate('author', '-password -email'),
+        .populate('author', 'fullname image'),
       count: await Blog.countDocuments(query),
       message: 'Blogs Fetched Successfully',
     });
@@ -44,7 +44,7 @@ export const bookmarks = asyncHandler(async (req: Request, res: Response): Promi
     return res.status(200).json({
       data: await Blog.find(query)
         .limit(Number(pageSize || 20))
-        .populate('author', '-password -email'),
+        .populate('author', 'fullname image'),
       count: await Blog.countDocuments(query),
       message: 'Bookmarks Fetched Successfully',
     });
@@ -65,7 +65,7 @@ export const followingBlogs = asyncHandler(
       return res.status(200).json({
         data: await Blog.find(query)
           .limit(Number(pageSize || 20))
-          .populate('author', '-password -email'),
+          .populate('author', 'fullname image'),
         count: await Blog.countDocuments(query),
         message: 'Following Blogs Fetched Successfully',
       });

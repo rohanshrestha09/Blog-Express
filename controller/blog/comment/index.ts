@@ -1,26 +1,22 @@
 import { Request, Response } from 'express';
-import { Types } from 'mongoose';
-import Blog from '../../model/Blog';
-import User from '../../model/User';
+import Blog from '../../../model/Blog';
+import Comment from '../../../model/Comment';
 const asyncHandler = require('express-async-handler');
 
 export const comments = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
-  const { comments }: { comments: { user: Types.ObjectId; comment: string }[] } = res.locals.blog;
+  const { comments } = res.locals.blog;
 
   const { pageSize } = req.query;
 
+  const dataComments = await Comment.find({ _id: comments })
+    .limit(Number(pageSize || 20))
+    .populate('user', 'fullname image');
+
   try {
-    const users = await User.find({ _id: comments.map(({ user }) => user) }).select(
-      '-password -email'
-    );
-
-    const commentsOutput = comments.map(({ user, comment }) => {
-      return { user: users.find(({ _id }) => _id.toString() === user.toString()), comment };
-    });
-
     return res.status(200).json({
-      data: commentsOutput.slice(0, Number(pageSize || 20)),
-      count: commentsOutput.length,
+      data: dataComments,
+      count: await Comment.countDocuments({ _id: comments }),
+      commentsCount: dataComments.length,
       message: 'Comments Fetched Successfully',
     });
   } catch (err: Error | any) {
@@ -37,8 +33,14 @@ export const comment = asyncHandler(async (req: Request, res: Response): Promise
   const { comment } = req.body;
 
   try {
+    const { _id: commentId } = await Comment.create({
+      blog: blogId,
+      user: authId,
+      comment,
+    });
+
     await Blog.findByIdAndUpdate(blogId, {
-      $push: { comments: { commenter: authId, comment } },
+      $push: { comments: commentId },
       commentsCount: commentsCount + 1,
     });
 
@@ -49,16 +51,15 @@ export const comment = asyncHandler(async (req: Request, res: Response): Promise
 });
 
 export const uncomment = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
-  const {
-    auth: { _id: authId },
-    blog: { _id: blogId, commentsCount },
-  } = res.locals;
+  const { _id: blogId, commentsCount } = res.locals.blog;
 
-  const { comment } = req.body;
+  const { commentId } = req.query;
 
   try {
+    await Comment.findByIdAndDelete(commentId);
+
     await Blog.findByIdAndUpdate(blogId, {
-      $pull: { comments: { commenter: authId, comment } },
+      $pull: { comments: commentId },
       commentsCount: commentsCount - 1,
     });
 

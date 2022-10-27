@@ -6,13 +6,13 @@ import { followers, following } from '../controller/user/followers';
 
 const router: Router = Router();
 
-router.get('/user/suggestions', suggestions);
-
 router.post('/register', register);
 
 router.post('/login', login);
 
-router.use(['/user/*'], validateUser);
+router.get('/user/suggestions', suggestions);
+
+router.param('user', validateUser);
 
 router.get('/user/:user', user);
 
