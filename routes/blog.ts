@@ -1,12 +1,12 @@
 import { Router } from 'express';
+import auth from '../middleware/auth';
+import validateBlog from '../middleware/validateBlog';
 import { blog, blogs, suggestions, postBlog, updateBlog, deleteBlog } from '../controller/blog';
 import { genre } from '../controller/blog/genre';
 import { publish, unpublish } from '../controller/blog/publish';
 import { likes, like, unlike } from '../controller/blog/like';
 import { bookmark, unbookmark } from '../controller/blog/bookmark';
 import { comments, comment, uncomment } from '../controller/blog/comment';
-import auth from '../middleware/auth';
-import validateBlog from '../middleware/validateBlog';
 import { likeComment, unlikeComment } from '../controller/blog/comment/like';
 
 const router: Router = Router();
