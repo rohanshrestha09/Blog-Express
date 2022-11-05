@@ -2,7 +2,7 @@ import { Router } from 'express';
 import auth from '../middleware/auth';
 import validateUser from '../middleware/validateUser';
 import validatePassword from '../middleware/validatePassword';
-import { authHandler, deleteImage, deleteProfile, logout, updateProfile } from '../controller/auth';
+import { authHandler, deleteImage, deleteProfile, updateProfile } from '../controller/auth';
 import { blogs, bookmarks, followingBlogs } from '../controller/auth/blog';
 import { follow, unfollow } from '../controller/auth/follow';
 import { followers, following } from '../controller/auth/followers';
@@ -20,8 +20,6 @@ router.put('/auth', validatePassword, updateProfile);
 router.delete('/auth', validatePassword, deleteProfile);
 
 router.delete('/auth/image', deleteImage);
-
-router.delete('/auth/logout', logout);
 
 router.post('/auth/:user/follow', follow);
 
