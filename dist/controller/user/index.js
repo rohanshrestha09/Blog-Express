@@ -55,7 +55,7 @@ exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, 
         const serialized = (0, cookie_1.serialize)('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV !== 'development',
-            sameSite: 'none',
+            sameSite: 'lax',
             maxAge: 60 * 60 * 24 * 30,
             path: '/',
         });
@@ -81,7 +81,7 @@ exports.login = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, fun
         const serialized = (0, cookie_1.serialize)('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV !== 'development',
-            sameSite: 'none',
+            sameSite: 'lax',
             maxAge: 60 * 60 * 24 * 30,
             path: '/',
         });
