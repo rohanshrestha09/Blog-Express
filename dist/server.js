@@ -9,6 +9,7 @@ const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const db_1 = __importDefault(require("./db"));
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 require('dotenv').config({ path: __dirname + '/.env' });
 const app = (0, express_1.default)();
@@ -17,6 +18,7 @@ app.use(cors({
     origin: 'http://localhost:3000',
     credentials: true,
 }));
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use((0, express_fileupload_1.default)());
 (0, db_1.default)();

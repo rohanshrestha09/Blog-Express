@@ -24,17 +24,7 @@ const asyncHandler = require('express-async-handler');
   }
 }*/
 exports.default = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { headers: { cookie }, } = req;
-    if (cookie) {
-        const values = cookie.split(';').reduce((res, item) => {
-            const [name, value] = item.trim().split('=');
-            return Object.assign(Object.assign({}, res), { [name]: value });
-        }, {});
-        res.locals.cookie = values;
-    }
-    else
-        res.locals.cookie = {};
-    const { token } = res.locals.cookie;
+    const { token } = req.cookies;
     if (!token)
         return res.status(401).json({ message: 'Not authorised' });
     try {
