@@ -10,11 +10,9 @@ const db_1 = __importDefault(require("./db"));
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
 require('dotenv').config({ path: __dirname + '/.env' });
 const app = (0, express_1.default)();
 app.use(express_1.default.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(cors({
     origin: 'http://localhost:3000',
     credentials: true,

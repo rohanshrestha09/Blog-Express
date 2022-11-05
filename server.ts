@@ -5,14 +5,11 @@ import connectDB from './db';
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
 require('dotenv').config({ path: __dirname + '/.env' });
 
 const app: Application = express();
 
 app.use(express.urlencoded({ extended: false }));
-
-app.use(cookieParser());
 
 app.use(
   cors({

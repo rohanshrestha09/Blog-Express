@@ -14,7 +14,19 @@ const asyncHandler = require('express-async-handler');
 
 export default asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
-    const { token } = req.cookies;
+    const {
+      headers: { cookie },
+    } = req;
+
+    if (cookie) {
+      const values = cookie.split(';').reduce((res, item) => {
+        const [name, value] = item.trim().split('=');
+        return { ...res, [name]: value };
+      }, {});
+      res.locals.cookie = values;
+    } else res.locals.cookie = {};
+
+    const { token } = res.locals.cookie;
 
     if (!token) return res.status(401).json({ message: 'Not authorised' });
 
