@@ -29,7 +29,7 @@ const limiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
-const serviceAccount = require('./blog-sansar-firebase-adminsdk-8snwe-96b9089a8c.json');
+const serviceAccount = require('./blog-sansar-firebase-adminsdk-8snwe-96b9089a8c.js');
 (0, app_1.initializeApp)({
     credential: (0, app_1.cert)(serviceAccount),
     storageBucket: 'gs://blog-sansar.appspot.com',

@@ -36,7 +36,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-const serviceAccount = require('./blog-sansar-firebase-adminsdk-8snwe-96b9089a8c.json');
+const serviceAccount = require('./blog-sansar-firebase-adminsdk-8snwe-96b9089a8c.js');
 
 initializeApp({
   credential: cert(serviceAccount),
