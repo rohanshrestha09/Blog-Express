@@ -13,31 +13,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = require("jsonwebtoken");
-const cookie_1 = require("cookie");
 const User_1 = __importDefault(require("../model/User"));
 const asyncHandler = require('express-async-handler');
-/*declare global {
-  namespace Express {
-    interface Request {
-      shouldSkip: boolean;
-    }
-  }
-}*/
 exports.default = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { token } = req.cookies;
+    var _a, _b;
+    const [_, token] = (((_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.startsWith('Bearer')) && ((_b = req.headers.authorization) === null || _b === void 0 ? void 0 : _b.split(' '))) ||
+        [];
     if (!token)
         return res.status(401).json({ message: 'Not authorised' });
     try {
         const { _id } = (0, jsonwebtoken_1.verify)(token, process.env.JWT_TOKEN);
         const auth = yield User_1.default.findById(_id).select('-password');
-        if (!auth) {
-            const serialized = (0, cookie_1.serialize)('token', '', {
-                maxAge: 0,
-                path: '/',
-            });
-            res.setHeader('Set-Cookie', serialized);
+        if (!auth)
             return res.status(404).json({ message: 'User does not exist' });
-        }
         res.locals.auth = auth;
         next();
     }

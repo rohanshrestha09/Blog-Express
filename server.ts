@@ -4,7 +4,6 @@ import fileUpload from 'express-fileupload';
 import connectDB from './db';
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 require('dotenv').config({ path: __dirname + '/.env' });
 
@@ -18,8 +17,6 @@ app.use(
     credentials: true,
   })
 );
-
-app.use(cookieParser());
 
 app.use(bodyParser.json());
 

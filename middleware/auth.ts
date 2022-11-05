@@ -1,20 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { JwtPayload, Secret, verify } from 'jsonwebtoken';
-import { serialize } from 'cookie';
 import User from '../model/User';
 const asyncHandler = require('express-async-handler');
 
-/*declare global {
-  namespace Express {
-    interface Request {
-      shouldSkip: boolean;
-    }
-  }
-}*/
-
 export default asyncHandler(
   async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
-    const { token } = req.cookies;
+    const [_, token] =
+      (req.headers.authorization?.startsWith('Bearer') && req.headers.authorization?.split(' ')) ||
+      [];
 
     if (!token) return res.status(401).json({ message: 'Not authorised' });
 
@@ -23,16 +16,7 @@ export default asyncHandler(
 
       const auth = await User.findById(_id).select('-password');
 
-      if (!auth) {
-        const serialized = serialize('token', '', {
-          maxAge: 0,
-          path: '/',
-        });
-
-        res.setHeader('Set-Cookie', serialized);
-
-        return res.status(404).json({ message: 'User does not exist' });
-      }
+      if (!auth) return res.status(404).json({ message: 'User does not exist' });
 
       res.locals.auth = auth;
 
