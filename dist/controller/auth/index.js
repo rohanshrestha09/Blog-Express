@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProfile = exports.deleteImage = exports.updateProfile = exports.authHandler = void 0;
+exports.logout = exports.deleteProfile = exports.deleteImage = exports.updateProfile = exports.authHandler = void 0;
 const moment_1 = __importDefault(require("moment"));
+const cookie_1 = require("cookie");
 const uploadFile_1 = __importDefault(require("../../middleware/uploadFile"));
 const deleteFile_1 = __importDefault(require("../../middleware/deleteFile"));
 const User_1 = __importDefault(require("../../model/User"));
@@ -73,6 +74,19 @@ exports.deleteProfile = asyncHandler((req, res) => __awaiter(void 0, void 0, voi
             (0, deleteFile_1.default)(`users/${imageName}`);
         yield User_1.default.findByIdAndDelete(authId);
         return res.status(200).json({ message: 'Profile Deleted Successfully' });
+    }
+    catch (err) {
+        return res.status(404).json({ message: err.message });
+    }
+}));
+exports.logout = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const serialized = (0, cookie_1.serialize)('token', '', {
+            maxAge: 0,
+            path: '/',
+        });
+        res.setHeader('Set-Cookie', serialized);
+        return res.status(200).json({ message: 'Logout Successful' });
     }
     catch (err) {
         return res.status(404).json({ message: err.message });

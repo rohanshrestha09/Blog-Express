@@ -16,6 +16,7 @@ exports.suggestions = exports.user = exports.login = exports.register = void 0;
 const moment_1 = __importDefault(require("moment"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = require("jsonwebtoken");
+const cookie_1 = require("cookie");
 const uploadFile_1 = __importDefault(require("../../middleware/uploadFile"));
 const User_1 = __importDefault(require("../../model/User"));
 const asyncHandler = require('express-async-handler');
@@ -51,6 +52,14 @@ exports.register = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, 
         const token = (0, jsonwebtoken_1.sign)({ _id: authId }, process.env.JWT_TOKEN, {
             expiresIn: '30d',
         });
+        const serialized = (0, cookie_1.serialize)('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV !== 'development',
+            sameSite: 'none',
+            maxAge: 60 * 60 * 24 * 30,
+            path: '/',
+        });
+        res.setHeader('Set-Cookie', serialized);
         return res.status(200).json({ token, message: 'Signup Successful' });
     }
     catch (err) {
@@ -69,6 +78,14 @@ exports.login = asyncHandler((req, res) => __awaiter(void 0, void 0, void 0, fun
         const token = (0, jsonwebtoken_1.sign)({ _id: user._id }, process.env.JWT_TOKEN, {
             expiresIn: '30d',
         });
+        const serialized = (0, cookie_1.serialize)('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV !== 'development',
+            sameSite: 'none',
+            maxAge: 60 * 60 * 24 * 30,
+            path: '/',
+        });
+        res.setHeader('Set-Cookie', serialized);
         return res.status(200).json({ token, message: 'Login Successful' });
     }
     catch (err) {
