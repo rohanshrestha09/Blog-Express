@@ -55,6 +55,7 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
     });
 
     const serialized = serialize('token', token, {
+      domain: 'localhost',
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
       sameSite: 'none',
@@ -87,6 +88,7 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<R
     });
 
     const serialized = serialize('token', token, {
+      domain: 'localhost',
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
       sameSite: 'none',
