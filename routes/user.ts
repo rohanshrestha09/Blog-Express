@@ -6,9 +6,9 @@ import { followers, following } from '../controller/user/followers';
 
 const router: Router = Router();
 
-router.post('/register', register);
+router.post('/user/register', register);
 
-router.post('/login', login);
+router.post('/user/login', login);
 
 router.get('/user/suggestions', suggestions);
 
