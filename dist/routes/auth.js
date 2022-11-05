@@ -18,6 +18,7 @@ router.get('/auth', auth_2.authHandler);
 router.put('/auth', validatePassword_1.default, auth_2.updateProfile);
 router.delete('/auth', validatePassword_1.default, auth_2.deleteProfile);
 router.delete('/auth/image', auth_2.deleteImage);
+router.delete('/auth/logout', auth_2.logout);
 router.post('/auth/:user/follow', follow_1.follow);
 router.delete('/auth/:user/follow', follow_1.unfollow);
 router.get('/auth/followers', followers_1.followers);

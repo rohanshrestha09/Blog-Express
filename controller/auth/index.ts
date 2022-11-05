@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import moment from 'moment';
+import { serialize } from 'cookie';
 import uploadFile from '../../middleware/uploadFile';
 import deleteFile from '../../middleware/deleteFile';
 import User from '../../model/User';
@@ -82,3 +83,18 @@ export const deleteProfile = asyncHandler(
     }
   }
 );
+
+export const logout = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const serialized = serialize('token', '', {
+      maxAge: 0,
+      path: '/',
+    });
+
+    res.setHeader('Set-Cookie', serialized);
+
+    return res.status(200).json({ message: 'Logout Successful' });
+  } catch (err: Error | any) {
+    return res.status(404).json({ message: err.message });
+  }
+});

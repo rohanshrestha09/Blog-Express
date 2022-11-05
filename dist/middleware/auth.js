@@ -16,9 +16,7 @@ const jsonwebtoken_1 = require("jsonwebtoken");
 const User_1 = __importDefault(require("../model/User"));
 const asyncHandler = require('express-async-handler');
 exports.default = asyncHandler((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
-    const [_, token] = (((_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.startsWith('Bearer')) && ((_b = req.headers.authorization) === null || _b === void 0 ? void 0 : _b.split(' '))) ||
-        [];
+    const { token } = req.cookies;
     if (!token)
         return res.status(401).json({ message: 'Not authorised' });
     try {

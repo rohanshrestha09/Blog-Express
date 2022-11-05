@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import moment from 'moment';
 import { PipelineStage } from 'mongoose';
+import { serialize } from 'cookie';
 import bcrypt from 'bcryptjs';
 import { sign, Secret } from 'jsonwebtoken';
 import uploadFile from '../../middleware/uploadFile';
@@ -53,6 +54,16 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
       expiresIn: '30d',
     });
 
+    const serialized = serialize('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+      sameSite: 'none',
+      maxAge: 60 * 60 * 24 * 30,
+      path: '/',
+    });
+
+    res.setHeader('Set-Cookie', serialized);
+
     return res.status(200).json({ token, message: 'Signup Successful' });
   } catch (err: Error | any) {
     return res.status(404).json({ message: err.message });
@@ -74,6 +85,16 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<R
     const token: string = sign({ _id: user._id }, process.env.JWT_TOKEN as Secret, {
       expiresIn: '30d',
     });
+
+    const serialized = serialize('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
+      sameSite: 'none',
+      maxAge: 60 * 60 * 24 * 30,
+      path: '/',
+    });
+
+    res.setHeader('Set-Cookie', serialized);
 
     return res.status(200).json({ token, message: 'Login Successful' });
   } catch (err: Error | any) {
