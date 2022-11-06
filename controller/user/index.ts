@@ -55,7 +55,7 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
     });
 
     const serialized = serialize('token', token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
       sameSite: 'none',
       maxAge: 60 * 60 * 24 * 30,
@@ -87,7 +87,7 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<R
     });
 
     const serialized = serialize('token', token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
       sameSite: 'none',
       maxAge: 60 * 60 * 24 * 30,
