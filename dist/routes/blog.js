@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = __importDefault(require("../middleware/auth"));
-const validateBlog_1 = __importDefault(require("../middleware/validateBlog"));
+const verifyBlog_1 = __importDefault(require("../middleware/verifyBlog"));
 const blog_1 = require("../controller/blog");
 const genre_1 = require("../controller/blog/genre");
 const publish_1 = require("../controller/blog/publish");
@@ -17,7 +17,7 @@ const router = (0, express_1.Router)();
 router.get('/blog', blog_1.blogs);
 router.get('/blog/suggestions', blog_1.suggestions);
 router.get('/blog/genre', genre_1.genre);
-router.param('blog', validateBlog_1.default);
+router.param('blog', verifyBlog_1.default);
 router.get('/blog/:blog', blog_1.blog);
 router.get('/blog/:blog/like', like_1.likes);
 router.get('/blog/:blog/comment', comment_1.comments);
