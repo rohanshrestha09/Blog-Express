@@ -1,12 +1,5 @@
-import { Schema, model, Types } from 'mongoose';
-
-interface ICommentSchema {
-  blog: Types.ObjectId;
-  user: Types.ObjectId;
-  comment: string;
-  likers: Types.ObjectId[];
-  likesCount: number;
-}
+import { Schema, model } from 'mongoose';
+import { ICommentSchema } from '../interface';
 
 const CommentSchema = new Schema<ICommentSchema>(
   {

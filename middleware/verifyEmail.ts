@@ -18,8 +18,6 @@ export default asyncHandler(
     try {
       const { data } = await axios.request(options);
 
-      console.log(data);
-
       if (data.response.email_status !== 'Yes')
         return res.status(404).json({ message: 'Invalid Email' });
 
