@@ -2,6 +2,9 @@ import express, { Application } from 'express';
 import { initializeApp, cert, ServiceAccount } from 'firebase-admin/app';
 import mongoose from 'mongoose';
 import fileUpload from 'express-fileupload';
+import dispatchSocket from './socket';
+const http = require('http');
+const { Server } = require('socket.io');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -9,6 +12,10 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config({ path: __dirname + '/.env' });
 
 const app: Application = express();
+
+const server = http.createServer(app);
+
+const io = new Server(server);
 
 app.use(express.urlencoded({ extended: false }));
 
@@ -64,4 +71,6 @@ app.use('/api', require('./routes/security'));
 
 app.use('/api', require('./routes/notification'));
 
-app.listen(PORT);
+dispatchSocket(io);
+
+server.listen(PORT);
