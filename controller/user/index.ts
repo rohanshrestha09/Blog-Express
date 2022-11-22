@@ -31,7 +31,7 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
       fullname,
       email,
       password: encryptedPassword,
-      dateOfBirth: new Date(moment(dateOfBirth).format()),
+      dateOfBirth: dateOfBirth && new Date(moment(dateOfBirth).format()),
     });
 
     if (req.files) {
@@ -126,14 +126,14 @@ export const suggestions = asyncHandler(async (req: Request, res: Response): Pro
       },
     });
 
-  const users = await User.aggregate([...query, { $sample: { size: Number(pageSize || 20) } }]);
-
-  const [{ totalCount } = { totalCount: 0 }] = await User.aggregate([
-    ...query,
-    { $count: 'totalCount' },
-  ]);
-
   try {
+    const users = await User.aggregate([...query, { $sample: { size: Number(pageSize || 20) } }]);
+
+    const [{ totalCount } = { totalCount: 0 }] = await User.aggregate([
+      ...query,
+      { $count: 'totalCount' },
+    ]);
+
     return res.status(200).json({
       data: users,
       count: totalCount,
