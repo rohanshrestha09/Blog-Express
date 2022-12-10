@@ -71,6 +71,6 @@ app.use('/api', require('./routes/security'));
 
 app.use('/api', require('./routes/notification'));
 
-dispatchSocket(io);
-
 server.listen(PORT);
+
+dispatchSocket(io);
