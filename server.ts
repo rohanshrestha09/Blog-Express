@@ -3,6 +3,8 @@ import { initializeApp, cert, ServiceAccount } from 'firebase-admin/app';
 import mongoose from 'mongoose';
 import fileUpload from 'express-fileupload';
 import dispatchSocket from './socket';
+import router from './routes';
+
 const http = require('http');
 const { Server } = require('socket.io');
 const rateLimit = require('express-rate-limit');
@@ -61,15 +63,7 @@ initializeApp({
 
 app.use(limiter);
 
-app.use('/api', require('./routes/auth'));
-
-app.use('/api', require('./routes/user'));
-
-app.use('/api', require('./routes/blog'));
-
-app.use('/api', require('./routes/security'));
-
-app.use('/api', require('./routes/notification'));
+app.use('/api', router);
 
 server.listen(PORT);
 

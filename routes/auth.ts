@@ -2,39 +2,48 @@ import { Router } from 'express';
 import auth from '../middleware/auth';
 import verifyUser from '../middleware/verifyUser';
 import verifyPassword from '../middleware/verifyPassword';
-import { authHandler, deleteImage, deleteProfile, logout, updateProfile } from '../controller/auth';
+import {
+  authHandler,
+  completeAuth,
+  deleteImage,
+  deleteProfile,
+  logout,
+  updateProfile,
+} from '../controller/auth';
 import { blogs, bookmarks, followingBlogs } from '../controller/auth/blog';
 import { follow, unfollow } from '../controller/auth/follow';
 import { followers, following } from '../controller/auth/followers';
 
 const router: Router = Router();
 
-router.use(['/auth', '/auth/*'], auth);
+router.use(['/', '/*'], auth);
 
 router.param('user', verifyUser);
 
-router.get('/auth', authHandler);
+router.get('/', authHandler);
 
-router.put('/auth', verifyPassword, updateProfile);
+router.put('/complete-auth', completeAuth);
 
-router.delete('/auth', verifyPassword, deleteProfile);
+router.put('/', verifyPassword, updateProfile);
 
-router.delete('/auth/image', deleteImage);
+router.delete('/', verifyPassword, deleteProfile);
 
-router.delete('/auth/logout', logout);
+router.delete('/image', deleteImage);
 
-router.post('/auth/:user/follow', follow);
+router.delete('/logout', logout);
 
-router.delete('/auth/:user/follow', unfollow);
+router.post('/:user/follow', follow);
 
-router.get('/auth/followers', followers);
+router.delete('/:user/follow', unfollow);
 
-router.get('/auth/following', following);
+router.get('/followers', followers);
 
-router.get('/auth/blog', blogs);
+router.get('/following', following);
 
-router.get('/auth/blog/bookmarks', bookmarks);
+router.get('/blog', blogs);
 
-router.get('/auth/blog/following', followingBlogs);
+router.get('/blog/bookmarks', bookmarks);
 
-module.exports = router;
+router.get('/blog/following', followingBlogs);
+
+export default router;

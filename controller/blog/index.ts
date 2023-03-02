@@ -4,6 +4,7 @@ import uploadFile from '../../middleware/uploadFile';
 import deleteFile from '../../middleware/deleteFile';
 import Blog from '../../model/Blog';
 import User from '../../model/User';
+import Comment from '../../model/Comment';
 import Notification from '../../model/Notification';
 import { dispatchNotification } from '../../socket';
 import { NOTIFICATION } from '../../interface';
@@ -18,8 +19,6 @@ export const blogs = asyncHandler(async (req: Request, res: Response): Promise<R
     { $match: { isPublished: true } },
     { $sort: { [String(sort || 'likesCount')]: -1 } },
   ];
-
-  if (sort === 'likesCount') query.push({ $sort: { createdAt: 1 } });
 
   if (genre) query.push({ $match: { genre: { $in: String(genre).split(',') } } });
 
@@ -154,6 +153,8 @@ export const deleteBlog = asyncHandler(async (req: Request, res: Response): Prom
     if (image && imageName) deleteFile(`blogs/${imageName}`);
 
     await Blog.findByIdAndDelete(blogId);
+
+    await Comment.deleteMany({ blog: blogId });
 
     await User.findByIdAndUpdate(authId, { $pull: { blogs: blogId } });
 

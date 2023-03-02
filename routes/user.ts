@@ -1,26 +1,28 @@
 import { Router } from 'express';
 import verifyUser from '../middleware/verifyUser';
 import verifyEmail from '../middleware/verifyEmail';
-import { login, register, suggestions, user } from '../controller/user';
+import { googleLogin, login, register, suggestions, user } from '../controller/user';
 import { blog } from '../controller/user/blog';
 import { followers, following } from '../controller/user/followers';
 
 const router: Router = Router();
 
-router.post('/user/register', verifyEmail, register);
+router.post('/register', register);
 
-router.post('/user/login', login);
+router.post('/login', login);
 
-router.get('/user/suggestions', suggestions);
+router.post('/login/google', googleLogin);
+
+router.get('/suggestions', suggestions);
 
 router.param('user', verifyUser);
 
-router.get('/user/:user', user);
+router.get('/:user', user);
 
-router.get('/user/:user/blog', blog);
+router.get('/:user/blog', blog);
 
-router.get('/user/:user/followers', followers);
+router.get('/:user/followers', followers);
 
-router.get('/user/:user/following', following);
+router.get('/:user/following', following);
 
-module.exports = router;
+export default router;
