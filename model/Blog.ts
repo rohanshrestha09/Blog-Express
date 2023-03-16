@@ -156,18 +156,15 @@ BlogSchema.statics.findLikes = async function ({
         pipeline: lookupPipeline,
       },
     },
-    { $project: { _id: 0 } },
+    { $unwind: '$likes' },
+    { $replaceWith: '$likes' },
   ];
 
-  const [docs] = await this.aggregate([
-    ...query([...lookupPipeline, { $limit: limit || 20 }]),
-  ]).project({ likes: 1 });
+  const data = await this.aggregate([...query([...lookupPipeline, { $limit: limit || 20 }])]);
 
   const [total] = await this.aggregate([...query([...lookupPipeline, { $count: 'count' }])]);
 
-  const count = total?.likes[0]?.count ?? 0;
-
-  const data = docs?.likes || [];
+  const count = total?.count ?? 0;
 
   return { data, count };
 };
